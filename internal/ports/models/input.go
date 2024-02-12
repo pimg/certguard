@@ -11,9 +11,9 @@ import (
 // keyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
 type inputKeyMap struct {
-	Back key.Binding
-	Quit key.Binding
-	// TODO add enter as confirm
+	Back  key.Binding
+	Enter key.Binding
+	Quit  key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -26,7 +26,7 @@ func (k *inputKeyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k *inputKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Back, k.Quit},
+		{k.Back, k.Enter, k.Quit},
 	}
 }
 
@@ -35,6 +35,9 @@ var inputKeys = inputKeyMap{
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "back to main view"),
 	),
+	Enter: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithKeys("enter", "confirm to get CRL")),
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
@@ -46,9 +49,10 @@ type InputModel struct {
 	help      help.Model
 	textinput textinput.Model
 	styles    *styles.Styles
+	confirm   bool
 }
 
-func NewInputModel() *InputModel {
+func NewInputModel() InputModel {
 	i := InputModel{}
 
 	model := textinput.New()
@@ -58,8 +62,9 @@ func NewInputModel() *InputModel {
 	i.help = help.New()
 	i.keys = inputKeys
 	i.styles = styles.DefaultStyles()
+	i.confirm = false
 
-	return &i
+	return i
 }
 
 func (i InputModel) Init() tea.Cmd {
@@ -67,6 +72,8 @@ func (i InputModel) Init() tea.Cmd {
 }
 
 func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -74,15 +81,21 @@ func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return i, Back(0)
 		case key.Matches(msg, i.keys.Quit):
 			return i, Exit // send quitting msg
-		} // TODO on "enter" return cmd to perform IO and save input model
-	}
+		case key.Matches(msg, i.keys.Enter):
+			i.confirm = true
+			return i, nil
+		}
 
-	var cmd tea.Cmd
+	}
 	i.textinput, cmd = i.textinput.Update(msg)
 	return i, cmd
 }
 
 func (i InputModel) View() string {
+	inputValue := ""
+	if i.confirm == true {
+		inputValue = "you entered value: " + i.textinput.Value()
+	}
 
-	return i.styles.InputField.Render(i.textinput.View())
+	return i.styles.InputField.Render(i.textinput.View()) + "\n" + inputValue
 }

@@ -112,7 +112,7 @@ func (m MainModel) Init() tea.Cmd {
 }
 
 func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+	var cmd []tea.Cmd
 
 	// global key switches
 	switch msg := msg.(type) {
@@ -128,8 +128,6 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Quit) && m.state != inputView: // input view has it's own quit keybinding since we cannot use "q"
 			m.quitting = true
 			return m, Exit
-		//m.quitting = true
-		//return m, tea.Quit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		}
@@ -142,10 +140,10 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.help.Width = msg.Width
-		case tea.KeyMsg:
+		default:
 			inputModel, inputCmd := m.input.Update(msg)
 			m.input = inputModel.(InputModel)
-			cmd = inputCmd
+			cmd = append(cmd, inputCmd)
 		}
 	case mainView:
 
@@ -156,12 +154,13 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if key.Matches(msg, m.keys.Search) {
 				m.title = "Search for a new CRL by entering the URL"
 				m.state = inputView
-				m.input = *NewInputModel()
+				m.input = NewInputModel()
+				return m, m.input.Init()
 			}
 		}
 	}
 
-	return m, cmd
+	return m, tea.Batch(cmd...)
 }
 
 func (m MainModel) View() string {
