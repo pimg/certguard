@@ -85,15 +85,15 @@ func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			i.confirm = true
 			return i, nil
 		}
-
 	}
+
 	i.textinput, cmd = i.textinput.Update(msg)
 	return i, cmd
 }
 
 func (i InputModel) View() string {
 	inputValue := ""
-	if i.confirm == true {
+	if i.confirm {
 		inputValue = "you entered value: " + i.textinput.Value()
 	}
 
