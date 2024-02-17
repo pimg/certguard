@@ -13,7 +13,7 @@ func Execute() error {
 		Long:    "Crl Inspector (crl) can download and inspect x.509 Certificate Revocation Lists",
 		Example: "crl",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if _, err := tea.NewProgram(models.NewMainModel(), tea.WithAltScreen()).Run(); err != nil {
+			if _, err := tea.NewProgram(models.NewBaseModel(), tea.WithAltScreen()).Run(); err != nil {
 				return err
 			}
 			return nil
