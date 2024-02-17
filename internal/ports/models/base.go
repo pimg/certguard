@@ -180,5 +180,4 @@ func (m BaseModel) View() string {
 		helpMenu := helpView
 		return lipgloss.JoinVertical(lipgloss.Top, title, helpMenu)
 	}
-
 }
