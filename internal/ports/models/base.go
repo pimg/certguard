@@ -2,21 +2,27 @@ package models
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pimg/crl-inspector/internal/ports/models/styles"
 )
 
 type sessionState int
 
 const (
-	mainView = iota
+	baseView = iota
 	inputView
 	listView
 )
+
+var titles = map[sessionState]string{
+	baseView:  "CRL inspector",
+	inputView: "Search for a new CRL by entering it's URL",
+	listView:  "Pick an entry from the CRL to inspect",
+}
 
 type BackMsg int
 
@@ -86,47 +92,44 @@ var keys = keyMap{
 	),
 }
 
-type MainModel struct {
-	title      string
-	state      sessionState
-	keys       keyMap
-	help       help.Model
-	quitting   bool
-	inputStyle lipgloss.Style
-	input      InputModel
+type BaseModel struct {
+	title  string
+	state  sessionState
+	keys   keyMap
+	help   help.Model
+	styles *styles.Styles
+	input  InputModel
 }
 
-func NewMainModel() MainModel {
-	return MainModel{
-		title:      "CRL Inspector",
-		state:      0,
-		keys:       keys,
-		quitting:   false,
-		help:       help.New(),
-		inputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("#FF75B7")),
+func NewMainModel() BaseModel {
+	return BaseModel{
+		title:  "CRL Inspector",
+		state:  0,
+		keys:   keys,
+		help:   help.New(),
+		styles: styles.DefaultStyles(),
 	}
 }
 
-func (m MainModel) Init() tea.Cmd {
+func (m BaseModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd []tea.Cmd
 
 	// global key switches
 	switch msg := msg.(type) {
 	case BackMsg:
 		m.state = sessionState(msg)
+		m.title = titles[m.state]
 	case ExitMsg:
-		m.quitting = true
 		return m, tea.Quit
 	case tea.WindowSizeMsg:
 		m.help.Width = msg.Width
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit) && m.state != inputView: // input view has it's own quit keybinding since we cannot use "q"
-			m.quitting = true
 			return m, Exit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
@@ -136,24 +139,24 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// state specific actions
 	switch m.state {
 	case inputView:
-
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.help.Width = msg.Width
+			m.styles.Background.Width(msg.Width)
+			m.styles.Background.Height(msg.Height)
 		default:
 			inputModel, inputCmd := m.input.Update(msg)
 			m.input = inputModel.(InputModel)
 			cmd = append(cmd, inputCmd)
 		}
-	case mainView:
-
+	case baseView:
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.help.Width = msg.Width
 		case tea.KeyMsg:
 			if key.Matches(msg, m.keys.Search) {
-				m.title = "Search for a new CRL by entering the URL"
 				m.state = inputView
+				m.title = titles[m.state]
 				m.input = NewInputModel()
 				return m, m.input.Init()
 			}
@@ -163,20 +166,19 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmd...)
 }
 
-func (m MainModel) View() string {
-	if m.quitting {
-		return "Bye!\n"
-	}
-
+func (m BaseModel) View() string {
 	helpView := m.help.View(&keys)
 
 	switch m.state {
 	case inputView:
-		height := 8 - strings.Count(m.input.View(), "\n") - strings.Count(m.input.help.View(&inputKeys), "\n")
-		return "\n" + m.input.View() + strings.Repeat("\n", height) + m.input.help.View(&inputKeys)
+		title := m.styles.Title.Render(m.title)
+		inputBox := m.input.View()
+		helpMenu := m.input.help.View(&inputKeys)
+		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox, helpMenu)
 	default:
-		height := 8 - strings.Count(m.title, "\n") - strings.Count(helpView, "\n")
-		return "\n" + m.title + strings.Repeat("\n", height) + helpView
+		title := m.styles.Title.Render(m.title)
+		helpMenu := helpView
+		return lipgloss.JoinVertical(lipgloss.Top, title, helpMenu)
 	}
 
 }
