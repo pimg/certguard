@@ -101,9 +101,9 @@ type BaseModel struct {
 	input  InputModel
 }
 
-func NewMainModel() BaseModel {
+func NewBaseModel() BaseModel {
 	return BaseModel{
-		title:  "CRL Inspector",
+		title:  titles[baseView],
 		state:  0,
 		keys:   keys,
 		help:   help.New(),
