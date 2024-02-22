@@ -5,7 +5,11 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/pimg/crl-inspector/internal/ports/models/commands"
+	"github.com/pimg/crl-inspector/internal/ports/models/messages"
 	"github.com/pimg/crl-inspector/internal/ports/models/styles"
+	"github.com/pimg/crl-inspector/pkg/uri"
 )
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
@@ -49,20 +53,18 @@ type InputModel struct {
 	help      help.Model
 	textinput textinput.Model
 	styles    *styles.Styles
-	confirm   bool
 }
 
 func NewInputModel() InputModel {
 	i := InputModel{}
 
-	model := textinput.New()
-	model.Placeholder = "Enter the URL of a CRL"
-	model.Focus()
-	i.textinput = model
+	input := textinput.New()
+	input.Placeholder = "Enter the URL of a CRL"
+	input.Focus()
+	i.textinput = input
 	i.help = help.New()
 	i.keys = inputKeys
 	i.styles = styles.DefaultStyles()
-	i.confirm = false
 
 	return i
 }
@@ -76,15 +78,25 @@ func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		i.textinput.Err = nil
 		switch {
-		case key.Matches(msg, i.keys.Back):
-			return i, Back(0)
 		case key.Matches(msg, i.keys.Quit):
-			return i, Exit // send quitting msg
+			return i, tea.Quit
 		case key.Matches(msg, i.keys.Enter):
-			i.confirm = true
-			return i, nil
+			confirmedInput := i.textinput.Value()
+			i.textinput.Reset()
+			err := uri.ValidateURI(confirmedInput)
+			if err != nil {
+				i.textinput.Err = err
+				return i, nil
+			}
+			cmd = commands.GetCRL(confirmedInput)
+			return i, cmd
 		}
+
+	case messages.ErrorMsg:
+		i.textinput.Err = msg.Err
+		return i, cmd
 	}
 
 	i.textinput, cmd = i.textinput.Update(msg)
@@ -92,10 +104,12 @@ func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (i InputModel) View() string {
-	inputValue := ""
-	if i.confirm {
-		inputValue = "you entered value: " + i.textinput.Value()
+	errorMsg := ""
+	// TODO introduce spinner since download time can be long toggleling spinners seems to  be done by creating  a new one: https://github.com/charmbracelet/bubbletea/blob/master/examples/spinners/main.go
+	if i.textinput.Err != nil {
+		errorMsg = i.textinput.Err.Error()
+		return lipgloss.JoinVertical(lipgloss.Top, i.styles.InputField.Render(i.textinput.View()), i.styles.ErrorMessages.Render(errorMsg))
 	}
 
-	return i.styles.InputField.Render(i.textinput.View()) + "\n" + inputValue
+	return lipgloss.JoinVertical(lipgloss.Top, i.styles.InputField.Render(i.textinput.View()), errorMsg)
 }
