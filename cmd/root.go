@@ -2,7 +2,7 @@ package cmd
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pimg/crl-inspector/internal/ports/models"
+	"github.com/pimg/certguard/internal/ports/models"
 	"github.com/spf13/cobra"
 )
 
