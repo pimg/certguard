@@ -33,10 +33,10 @@ func TestSwitchBackToBaseModel(t *testing.T) {
 	assert.Equal(t, sessionState(inputView), updatedModel.(BaseModel).state)
 	assert.Equal(t, titles[inputView], updatedModel.(BaseModel).title)
 
-	updatedModel, _ = updatedModel.Update(BackMsg(inputView))
+	updatedModel, _ = updatedModel.Update(keyBindingToKeyMsg(keys.Back))
 
-	assert.Equal(t, sessionState(inputView), updatedModel.(BaseModel).state)
-	assert.Equal(t, titles[inputView], updatedModel.(BaseModel).title)
+	assert.Equal(t, sessionState(baseView), updatedModel.(BaseModel).state)
+	assert.Equal(t, titles[baseView], updatedModel.(BaseModel).title)
 }
 
 func keyBindingToKeyMsg(keyBinding key.Binding) tea.KeyMsg {

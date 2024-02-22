@@ -1,12 +1,14 @@
 package models
 
 import (
+	"crypto/x509"
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pimg/crl-inspector/internal/ports/models/messages"
 	"github.com/pimg/crl-inspector/internal/ports/models/styles"
 )
 
@@ -22,21 +24,6 @@ var titles = map[sessionState]string{
 	baseView:  "CRL inspector",
 	inputView: "Search for a new CRL by entering it's URL",
 	listView:  "Pick an entry from the CRL to inspect",
-}
-
-type BackMsg int
-
-func Back(state sessionState) tea.Cmd {
-	fmt.Printf("Got back command")
-	return func() tea.Msg {
-		return BackMsg(state)
-	}
-}
-
-type ExitMsg struct{}
-
-func Exit() tea.Msg {
-	return ExitMsg{}
 }
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
@@ -99,6 +86,8 @@ type BaseModel struct {
 	help   help.Model
 	styles *styles.Styles
 	input  InputModel
+	crl    *x509.RevocationList
+	err    error
 }
 
 func NewBaseModel() BaseModel {
@@ -120,20 +109,24 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// global key switches
 	switch msg := msg.(type) {
-	case BackMsg:
-		m.state = sessionState(msg)
-		m.title = titles[m.state]
-	case ExitMsg:
-		return m, tea.Quit
 	case tea.WindowSizeMsg:
+		m.styles.Background.Width(msg.Width)
+		m.styles.Background.Height(msg.Height)
 		m.help.Width = msg.Width
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit) && m.state != inputView: // input view has it's own quit keybinding since we cannot use "q"
-			return m, Exit
+			return m, tea.Quit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
+		case key.Matches(msg, m.keys.Back):
+			m.state = baseView
+			m.title = titles[baseView]
 		}
+	case messages.CRLResponseMsg:
+		m.state = listView
+		m.title = titles[listView]
+		m.crl = msg.RevocationList
 	}
 
 	// state specific actions
@@ -142,8 +135,6 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.help.Width = msg.Width
-			m.styles.Background.Width(msg.Width)
-			m.styles.Background.Height(msg.Height)
 		default:
 			inputModel, inputCmd := m.input.Update(msg)
 			m.input = inputModel.(InputModel)
@@ -168,6 +159,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m BaseModel) View() string {
 	helpView := m.help.View(&keys)
+	errorMsg := ""
 
 	switch m.state {
 	case inputView:
@@ -175,9 +167,17 @@ func (m BaseModel) View() string {
 		inputBox := m.input.View()
 		helpMenu := m.input.help.View(&inputKeys)
 		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox, helpMenu)
+	case listView:
+		title := m.styles.Title.Render(m.title)
+		crlInfo := m.styles.Text.Render(fmt.Sprintf("CRL Issuer: %s, \nUpdated at: %s, \nNext update: %s", m.crl.Issuer.String(), m.crl.ThisUpdate.String(), m.crl.NextUpdate.String()))
+		helpMenu := helpView
+		return lipgloss.JoinVertical(lipgloss.Top, title, crlInfo, helpMenu)
 	default:
 		title := m.styles.Title.Render(m.title)
+		if m.err != nil {
+			errorMsg = m.err.Error()
+		}
 		helpMenu := helpView
-		return lipgloss.JoinVertical(lipgloss.Top, title, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, helpMenu) // TODO render help at the bottom of the screen
 	}
 }
