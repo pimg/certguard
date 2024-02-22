@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/x509"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -88,6 +89,8 @@ type BaseModel struct {
 	input  InputModel
 	crl    *x509.RevocationList
 	err    error
+	width  int
+	height int
 }
 
 func NewBaseModel() BaseModel {
@@ -110,6 +113,8 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// global key switches
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
 		m.styles.Background.Width(msg.Width)
 		m.styles.Background.Height(msg.Height)
 		m.help.Width = msg.Width
@@ -166,7 +171,8 @@ func (m BaseModel) View() string {
 		title := m.styles.Title.Render(m.title)
 		inputBox := m.input.View()
 		helpMenu := m.input.help.View(&inputKeys)
-		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox, helpMenu)
+		height := strings.Count(inputBox, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox) + lipgloss.Place(m.width, m.height-height, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case listView:
 		title := m.styles.Title.Render(m.title)
 		crlInfo := m.styles.Text.Render(fmt.Sprintf("CRL Issuer: %s, \nUpdated at: %s, \nNext update: %s", m.crl.Issuer.String(), m.crl.ThisUpdate.String(), m.crl.NextUpdate.String()))
@@ -178,6 +184,7 @@ func (m BaseModel) View() string {
 			errorMsg = m.err.Error()
 		}
 		helpMenu := helpView
-		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, helpMenu) // TODO render help at the bottom of the screen
+		height := strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	}
 }
