@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/pimg/crl-inspector/cmd"
+	"github.com/pimg/certguard/cmd"
 )
 
 func main() {

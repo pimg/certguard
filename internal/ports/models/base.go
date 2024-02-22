@@ -9,8 +9,8 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pimg/crl-inspector/internal/ports/models/messages"
-	"github.com/pimg/crl-inspector/internal/ports/models/styles"
+	"github.com/pimg/certguard/internal/ports/models/messages"
+	"github.com/pimg/certguard/internal/ports/models/styles"
 )
 
 type sessionState int

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pimg/crl-inspector/internal/ports/models/messages"
-	"github.com/pimg/crl-inspector/pkg/crl"
+	"github.com/pimg/certguard/internal/ports/models/messages"
+	"github.com/pimg/certguard/pkg/crl"
 )
 
 func GetCRL(requestURL string) tea.Cmd {

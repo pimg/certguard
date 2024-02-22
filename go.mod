@@ -1,4 +1,4 @@
-module github.com/pimg/crl-inspector
+module github.com/pimg/certguard
 
 go 1.21
 

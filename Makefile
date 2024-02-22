@@ -9,3 +9,7 @@ test:
 @PHONY: lint
 lint:
 	golangci-lint run --out-format=github-actions
+
+@PHONY: build
+build:
+	go build -o cg

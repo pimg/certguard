@@ -6,10 +6,10 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pimg/crl-inspector/internal/ports/models/commands"
-	"github.com/pimg/crl-inspector/internal/ports/models/messages"
-	"github.com/pimg/crl-inspector/internal/ports/models/styles"
-	"github.com/pimg/crl-inspector/pkg/uri"
+	"github.com/pimg/certguard/internal/ports/models/commands"
+	"github.com/pimg/certguard/internal/ports/models/messages"
+	"github.com/pimg/certguard/internal/ports/models/styles"
+	"github.com/pimg/certguard/pkg/uri"
 )
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
