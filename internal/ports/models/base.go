@@ -1,8 +1,6 @@
 package models
 
 import (
-	"crypto/x509"
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -87,7 +85,7 @@ type BaseModel struct {
 	help   help.Model
 	styles *styles.Styles
 	input  InputModel
-	crl    *x509.RevocationList
+	list   ListModel
 	err    error
 	width  int
 	height int
@@ -131,7 +129,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case messages.CRLResponseMsg:
 		m.state = listView
 		m.title = titles[listView]
-		m.crl = msg.RevocationList
+		m.list = NewListModel(msg.RevocationList)
 	}
 
 	// state specific actions
@@ -144,6 +142,15 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			inputModel, inputCmd := m.input.Update(msg)
 			m.input = inputModel.(InputModel)
 			cmd = append(cmd, inputCmd)
+		}
+	case listView:
+		switch msg := msg.(type) {
+		case tea.WindowSizeMsg:
+			m.help.Width = msg.Width
+		default:
+			listModel, listCmd := m.list.Update(msg)
+			m.list = listModel.(ListModel)
+			cmd = append(cmd, listCmd)
 		}
 	case baseView:
 		switch msg := msg.(type) {
@@ -175,9 +182,10 @@ func (m BaseModel) View() string {
 		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox) + lipgloss.Place(m.width, m.height-height, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case listView:
 		title := m.styles.Title.Render(m.title)
-		crlInfo := m.styles.Text.Render(fmt.Sprintf("CRL Issuer: %s, \nUpdated at: %s, \nNext update: %s", m.crl.Issuer.String(), m.crl.ThisUpdate.String(), m.crl.NextUpdate.String()))
-		helpMenu := helpView
-		return lipgloss.JoinVertical(lipgloss.Top, title, crlInfo, helpMenu)
+		listInfo := m.list.View()
+		helpMenu := m.list.help.View(&listKeys)
+		height := strings.Count(listInfo, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	default:
 		title := m.styles.Title.Render(m.title)
 		if m.err != nil {
