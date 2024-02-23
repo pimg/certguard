@@ -20,6 +20,6 @@ func DefaultStyles() *Styles {
 			PaddingLeft(2),
 		Background:    lipgloss.NewStyle().Background(lipgloss.Color("#282828")),
 		ErrorMessages: lipgloss.NewStyle().Background(lipgloss.Color("#FB4934")).BorderForeground(lipgloss.Color("#FB4934")).BorderStyle(lipgloss.NormalBorder()).Width(80).Padding(1),
-		Text:          lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).Padding(1),
+		Text:          lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).Padding(1).Width(80),
 	}
 }
