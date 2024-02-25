@@ -19,7 +19,7 @@ func TestInitialState(t *testing.T) {
 func TestSwitchToInputModel(t *testing.T) {
 	baseModel := NewBaseModel()
 
-	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Search))
+	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Download))
 
 	assert.Equal(t, sessionState(inputView), updatedModel.(BaseModel).state)
 	assert.Equal(t, titles[inputView], updatedModel.(BaseModel).title)
@@ -28,7 +28,7 @@ func TestSwitchToInputModel(t *testing.T) {
 func TestSwitchBackToBaseModel(t *testing.T) {
 	baseModel := NewBaseModel()
 
-	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Search))
+	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Download))
 
 	assert.Equal(t, sessionState(inputView), updatedModel.(BaseModel).state)
 	assert.Equal(t, titles[inputView], updatedModel.(BaseModel).title)
