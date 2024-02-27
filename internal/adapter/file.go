@@ -36,6 +36,10 @@ func (f *FileCache) Write(filename string, fileContent []byte) error {
 	return nil
 }
 
+func (f *FileCache) Dir() string {
+	return f.cacheDir
+}
+
 func determineCacheDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

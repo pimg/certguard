@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -42,6 +43,20 @@ func FetchRevocationList(revocationListURL string) (*x509.RevocationList, error)
 	}
 	if err != nil {
 		return nil, errors.Join(err, fmt.Errorf("cannot write the CRL to the cache: %s", filename))
+	}
+
+	return revocationList, nil
+}
+
+func LoadRevocationList(path string) (*x509.RevocationList, error) {
+	rawCRL, err := os.ReadFile(path)
+	if err != nil {
+		return nil, errors.Join(err, fmt.Errorf("unable to read file: %s", path))
+	}
+
+	revocationList, err := x509.ParseRevocationList(rawCRL)
+	if err != nil {
+		return nil, errors.Join(err, fmt.Errorf("cannot parse CRL from %q", path))
 	}
 
 	return revocationList, nil

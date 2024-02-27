@@ -17,12 +17,14 @@ const (
 	baseView = iota
 	inputView
 	listView
+	browseView
 )
 
 var titles = map[sessionState]string{
-	baseView:  "CRL inspector",
-	inputView: "Download a new CRL by entering it's URL",
-	listView:  "Pick an entry from the CRL to inspect",
+	baseView:   "CRL inspector",
+	inputView:  "Download a new CRL by entering it's URL",
+	listView:   "Pick an entry from the CRL to inspect",
+	browseView: "View and select a CRL from the local cache",
 }
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
@@ -33,6 +35,7 @@ type keyMap struct {
 	Help     key.Binding
 	Download key.Binding
 	Back     key.Binding
+	Browse   key.Binding
 	Quit     key.Binding
 }
 
@@ -46,7 +49,7 @@ func (k *keyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k *keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Download},
+		{k.Up, k.Down, k.Download, k.Browse},
 		{k.Back, k.Help, k.Quit},
 	}
 }
@@ -68,6 +71,10 @@ var keys = keyMap{
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "back to main view"),
 	),
+	Browse: key.NewBinding(
+		key.WithKeys("b"),
+		key.WithHelp("b", "browse local cache"),
+	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
@@ -86,6 +93,7 @@ type BaseModel struct {
 	styles *styles.Styles
 	input  InputModel
 	list   ListModel
+	browse BrowseModel
 	err    error
 	width  int
 	height int
@@ -152,6 +160,15 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.list = listModel.(ListModel)
 			cmd = append(cmd, listCmd)
 		}
+	case browseView:
+		switch msg := msg.(type) {
+		case tea.WindowSizeMsg:
+			m.help.Width = msg.Width
+		default:
+			browseModel, browseCmd := m.browse.Update(msg)
+			m.browse = browseModel.(BrowseModel)
+			cmd = append(cmd, browseCmd)
+		}
 	case baseView:
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
@@ -162,6 +179,12 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.title = titles[m.state]
 				m.input = NewInputModel()
 				return m, m.input.Init()
+			}
+			if key.Matches(msg, m.keys.Browse) {
+				m.state = browseView
+				m.title = titles[m.state]
+				m.browse = NewBrowseModel()
+				return m, m.browse.Init()
 			}
 		}
 	}
@@ -177,15 +200,21 @@ func (m BaseModel) View() string {
 	case inputView:
 		title := m.styles.Title.Render(m.title)
 		inputBox := m.input.View()
-		helpMenu := m.input.help.View(&inputKeys)
+		helpMenu := m.help.View(&inputKeys)
 		height := strings.Count(inputBox, "\n") + strings.Count(title, "\n")
-		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox) + lipgloss.Place(m.width, m.height-height, lipgloss.Left, lipgloss.Bottom, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case listView:
 		title := m.styles.Title.Render(m.title)
 		listInfo := m.list.View()
-		helpMenu := m.list.help.View(&listKeys)
+		helpMenu := m.help.View(&listKeys)
 		height := strings.Count(listInfo, "\n") + strings.Count(title, "\n")
-		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height, lipgloss.Left, lipgloss.Bottom, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
+	case browseView: // todo change this
+		title := m.styles.Title.Render(m.title)
+		listInfo := m.browse.View()
+		helpMenu := m.help.View(&browseKeys)
+		height := strings.Count(listInfo, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	default:
 		title := m.styles.Title.Render(m.title)
 		if m.err != nil {

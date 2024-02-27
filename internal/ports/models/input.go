@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -50,7 +49,6 @@ var inputKeys = inputKeyMap{
 
 type InputModel struct {
 	keys      inputKeyMap
-	help      help.Model
 	textinput textinput.Model
 	styles    *styles.Styles
 }
@@ -62,7 +60,6 @@ func NewInputModel() InputModel {
 	input.Placeholder = "Enter the URL of a CRL"
 	input.Focus()
 	i.textinput = input
-	i.help = help.New()
 	i.keys = inputKeys
 	i.styles = styles.DefaultStyles()
 
