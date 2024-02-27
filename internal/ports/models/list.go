@@ -4,7 +4,6 @@ import (
 	"crypto/x509"
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pimg/certguard/internal/ports/models/styles"
@@ -44,7 +43,6 @@ var listKeys = listKeyMap{
 
 type ListModel struct {
 	keys   listKeyMap
-	help   help.Model
 	styles *styles.Styles
 	crl    *x509.RevocationList
 }
@@ -52,7 +50,6 @@ type ListModel struct {
 func NewListModel(crl *x509.RevocationList) ListModel {
 	return ListModel{
 		keys:   listKeys,
-		help:   help.New(),
 		styles: styles.DefaultStyles(),
 		crl:    crl,
 	}
