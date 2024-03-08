@@ -11,20 +11,20 @@ type FileCache struct {
 	cacheDir string
 }
 
-func NewFileCache() error {
+func NewFileCache() (string, error) {
 	cacheDir, err := determineCacheDir()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = os.MkdirAll(cacheDir, 0o777)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	GlobalCache = &FileCache{cacheDir: cacheDir}
 
-	return nil
+	return cacheDir, nil
 }
 
 func (f *FileCache) Write(filename string, fileContent []byte) error {
