@@ -209,7 +209,7 @@ func (m BaseModel) View() string {
 		helpMenu := m.help.View(&listKeys)
 		height := strings.Count(listInfo, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
-	case browseView: // todo change this
+	case browseView:
 		title := m.styles.Title.Render(m.title)
 		listInfo := m.browse.View()
 		helpMenu := m.help.View(&browseKeys)
