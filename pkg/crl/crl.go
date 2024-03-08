@@ -6,11 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
-
-	"github.com/pimg/certguard/internal/adapter"
 )
 
 func FetchRevocationList(revocationListURL string) (*x509.RevocationList, error) {
@@ -30,33 +27,17 @@ func FetchRevocationList(revocationListURL string) (*x509.RevocationList, error)
 		return nil, errors.Join(err, fmt.Errorf("cannot parse HTTP response from %q", revocationListURL))
 	}
 
-	revocationList, err := x509.ParseRevocationList(rawCRL)
+	revocationList, err := ParseRevocationList(rawCRL)
 	if err != nil {
 		return nil, errors.Join(err, fmt.Errorf("cannot parse CRL from %q", revocationListURL))
 	}
-
-	filename := revocationListURL[strings.LastIndex(revocationListURL, "/"):]
-
-	err = adapter.GlobalCache.Write(filename, rawCRL)
-	if err != nil {
-		return nil, err
-	}
-	if err != nil {
-		return nil, errors.Join(err, fmt.Errorf("cannot write the CRL to the cache: %s", filename))
-	}
-
 	return revocationList, nil
 }
 
-func LoadRevocationList(path string) (*x509.RevocationList, error) {
-	rawCRL, err := os.ReadFile(path)
-	if err != nil {
-		return nil, errors.Join(err, fmt.Errorf("unable to read file: %s", path))
-	}
-
+func ParseRevocationList(rawCRL []byte) (*x509.RevocationList, error) {
 	revocationList, err := x509.ParseRevocationList(rawCRL)
 	if err != nil {
-		return nil, errors.Join(err, fmt.Errorf("cannot parse CRL from %q", path))
+		return nil, errors.Join(err, errors.New("cannot parse CRL from"))
 	}
 
 	return revocationList, nil
