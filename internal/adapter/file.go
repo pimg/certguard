@@ -36,6 +36,10 @@ func (f *FileCache) Write(filename string, fileContent []byte) error {
 	return nil
 }
 
+func (f *FileCache) Read(filename string) ([]byte, error) {
+	return os.ReadFile(filename)
+}
+
 func (f *FileCache) Dir() string {
 	return f.cacheDir
 }
