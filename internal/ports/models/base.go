@@ -137,7 +137,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case messages.CRLResponseMsg:
 		m.state = listView
 		m.title = titles[listView]
-		m.list = NewListModel(msg.RevocationList)
+		m.list = NewListModel(msg.RevocationList, m.width, m.height)
 	}
 
 	// state specific actions
@@ -155,6 +155,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.help.Width = msg.Width
+			m.list.list.SetSize(msg.Width, msg.Height)
 		default:
 			listModel, listCmd := m.list.Update(msg)
 			m.list = listModel.(ListModel)
@@ -206,9 +207,7 @@ func (m BaseModel) View() string {
 	case listView:
 		title := m.styles.Title.Render(m.title)
 		listInfo := m.list.View()
-		helpMenu := m.help.View(&listKeys)
-		height := strings.Count(listInfo, "\n") + strings.Count(title, "\n")
-		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo)
 	case browseView:
 		title := m.styles.Title.Render(m.title)
 		listInfo := m.browse.View()

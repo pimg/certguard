@@ -3,15 +3,19 @@ package models
 import (
 	"crypto/x509"
 	"fmt"
+	"strconv"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/pimg/certguard/internal/ports/models/styles"
 )
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
 type listKeyMap struct {
+	list.KeyMap
 	Back key.Binding
 	Quit key.Binding
 }
@@ -41,26 +45,66 @@ var listKeys = listKeyMap{
 	),
 }
 
+type item struct {
+	serialnumber, revocationReason, revocationDate string
+}
+
+func (i item) Title() string       { return i.serialnumber }
+func (i item) Description() string { return i.revocationDate }
+func (i item) FilterValue() string { return i.serialnumber }
+
 type ListModel struct {
 	keys   listKeyMap
 	styles *styles.Styles
+	list   list.Model
 	crl    *x509.RevocationList
 }
 
-func NewListModel(crl *x509.RevocationList) ListModel {
+func NewListModel(crl *x509.RevocationList, width, height int) ListModel {
+	items := revokedCertificatesToItems(crl.RevokedCertificateEntries)
+
+	defaultDelegate := list.NewDefaultDelegate()
+	c := styles.DefaultStyles().ListComponentTitle
+	defaultDelegate.Styles.SelectedTitle = defaultDelegate.Styles.SelectedTitle.Foreground(c).BorderLeftForeground(c)
+	defaultDelegate.Styles.SelectedDesc = defaultDelegate.Styles.SelectedTitle.Copy()
+
+	revokedList := list.New(items, defaultDelegate, width, height-12)
+	revokedList.Title = "Revoked Certificates"
+	revokedList.KeyMap.Quit = key.NewBinding(key.WithKeys("ctrl+c"), key.WithHelp("ctrl-c", "quit"))
+	revokedList.KeyMap.ClearFilter = key.NewBinding(key.WithKeys("ctrl+q"), key.WithHelp("ctrl-q", "clear"))
+	revokedList.KeyMap.CancelWhileFiltering = key.NewBinding(key.WithKeys("ctrl+q"), key.WithHelp("ctrl-q", "clear"))
+	revokedList.AdditionalShortHelpKeys = listKeys.ShortHelp
+
+	revokedList.Styles.Title = revokedList.Styles.Title.Background(c)
 	return ListModel{
 		keys:   listKeys,
 		styles: styles.DefaultStyles(),
+		list:   revokedList,
 		crl:    crl,
 	}
+}
+
+func revokedCertificatesToItems(entries []x509.RevocationListEntry) []list.Item {
+	items := make([]list.Item, 0, len(entries))
+	for _, entry := range entries {
+		items = append(items, item{
+			serialnumber:     entry.SerialNumber.String(),
+			revocationReason: strconv.Itoa(entry.ReasonCode),
+			revocationDate:   entry.RevocationTime.String(),
+		})
+	}
+
+	return items
 }
 
 func (l ListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (l ListModel) Update(_ tea.Msg) (tea.Model, tea.Cmd) {
-	return l, nil
+func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	l.list, cmd = l.list.Update(msg)
+	return l, cmd
 }
 
 func (l ListModel) View() string {
@@ -68,9 +112,11 @@ func (l ListModel) View() string {
 	updatedAt := fmt.Sprintf("Updated At          : %s", l.crl.ThisUpdate)
 	nextUpdate := fmt.Sprintf("Next Update         : %s", l.crl.NextUpdate)
 	revokedCertCount := fmt.Sprintf("Revoked Certificates: %d", len(l.crl.RevokedCertificateEntries))
+	revokedList := l.list.View()
 
 	crlInfo := l.styles.Text.Render(
 		fmt.Sprintf("%s\n%s\n%s\n%s", issuer, updatedAt, nextUpdate, revokedCertCount),
 	)
-	return crlInfo
+
+	return lipgloss.JoinVertical(lipgloss.Top, crlInfo, revokedList)
 }
