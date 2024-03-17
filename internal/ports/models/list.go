@@ -16,14 +16,15 @@ import (
 // key.Map. It could also very easily be a map[string]key.Binding.
 type listKeyMap struct {
 	list.KeyMap
-	Back key.Binding
-	Quit key.Binding
+	Back   key.Binding
+	Quit   key.Binding
+	Select key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k *listKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Back, k.Quit}
+	return []key.Binding{k.Back, k.Quit, k.Select}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -43,6 +44,10 @@ var listKeys = listKeyMap{
 		key.WithKeys("q", "ctrl+c"),
 		key.WithHelp("q", "quit"),
 	),
+	Select: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "select"),
+	),
 }
 
 type item struct {
@@ -54,10 +59,12 @@ func (i item) Description() string { return i.revocationDate }
 func (i item) FilterValue() string { return i.serialnumber }
 
 type ListModel struct {
-	keys   listKeyMap
-	styles *styles.Styles
-	list   list.Model
-	crl    *x509.RevocationList
+	keys         listKeyMap
+	styles       *styles.Styles
+	list         list.Model
+	crl          *x509.RevocationList
+	selectedItem *RevokedCertificateModel
+	itemSelected bool
 }
 
 func NewListModel(crl *x509.RevocationList, width, height int) ListModel {
@@ -103,6 +110,21 @@ func (l ListModel) Init() tea.Cmd {
 
 func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, listKeys.Select):
+			if len(l.list.VisibleItems()) != 0 {
+				selectedItem := l.list.SelectedItem().(item)
+				revokedCertificateModel := NewRevokedCertificateModel(selectedItem.serialnumber, selectedItem.revocationReason, selectedItem.revocationDate)
+				l.selectedItem = &revokedCertificateModel
+				l.itemSelected = true
+			}
+		default:
+			l.itemSelected = false
+		}
+	}
+
 	l.list, cmd = l.list.Update(msg)
 	return l, cmd
 }

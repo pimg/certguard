@@ -14,27 +14,28 @@ import (
 type sessionState int
 
 const (
-	baseView = iota
+	baseView sessionState = iota
 	inputView
 	listView
 	browseView
+	revokedCertificateView
 )
 
 var titles = map[sessionState]string{
-	baseView:   "CRL inspector",
-	inputView:  "Download a new CRL by entering it's URL",
-	listView:   "Pick an entry from the CRL to inspect",
-	browseView: "View and select a CRL from the local cache",
+	baseView:               "CRL inspector",
+	inputView:              "Download a new CRL by entering it's URL",
+	listView:               "Pick an entry from the CRL to inspect",
+	browseView:             "View and select a CRL from the local cache",
+	revokedCertificateView: "Revoked Certificate",
 }
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
 type keyMap struct {
-	Up       key.Binding
-	Down     key.Binding
 	Help     key.Binding
 	Download key.Binding
 	Back     key.Binding
+	Home     key.Binding
 	Browse   key.Binding
 	Quit     key.Binding
 }
@@ -49,27 +50,23 @@ func (k *keyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k *keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Download, k.Browse},
+		{k.Download, k.Browse, k.Home},
 		{k.Back, k.Help, k.Quit},
 	}
 }
 
 var keys = keyMap{
-	Up: key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "move up"),
-	),
-	Down: key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "move down"),
-	),
 	Download: key.NewBinding(
 		key.WithKeys("d"),
 		key.WithHelp("d", "download CRL"),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "back to main view"),
+		key.WithHelp("esc", "back to previous view"),
+	),
+	Home: key.NewBinding(
+		key.WithKeys("h"),
+		key.WithHelp("h", "back to the main view"),
 	),
 	Browse: key.NewBinding(
 		key.WithKeys("b"),
@@ -86,26 +83,28 @@ var keys = keyMap{
 }
 
 type BaseModel struct {
-	title  string
-	state  sessionState
-	keys   keyMap
-	help   help.Model
-	styles *styles.Styles
-	input  InputModel
-	list   ListModel
-	browse BrowseModel
-	err    error
-	width  int
-	height int
+	title     string
+	state     sessionState
+	prevState sessionState
+	keys      keyMap
+	help      help.Model
+	styles    *styles.Styles
+	input     InputModel
+	list      ListModel
+	browse    BrowseModel
+	err       error
+	width     int
+	height    int
 }
 
 func NewBaseModel() BaseModel {
 	return BaseModel{
-		title:  titles[baseView],
-		state:  0,
-		keys:   keys,
-		help:   help.New(),
-		styles: styles.DefaultStyles(),
+		title:     titles[baseView],
+		state:     baseView,
+		prevState: baseView,
+		keys:      keys,
+		help:      help.New(),
+		styles:    styles.DefaultStyles(),
 	}
 }
 
@@ -130,11 +129,19 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
-		case key.Matches(msg, m.keys.Back):
+		case key.Matches(msg, m.keys.Home):
+			m.prevState = m.state
 			m.state = baseView
 			m.title = titles[baseView]
+		case key.Matches(msg, m.keys.Back):
+			previousState := m.prevState
+			state := m.state
+			m.state = previousState
+			m.prevState = state
+			m.title = titles[m.state]
 		}
 	case messages.CRLResponseMsg:
+		m.prevState = m.state
 		m.state = listView
 		m.title = titles[listView]
 		m.list = NewListModel(msg.RevocationList, m.width, m.height)
@@ -159,7 +166,23 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		default:
 			listModel, listCmd := m.list.Update(msg)
 			m.list = listModel.(ListModel)
+
+			if m.list.selectedItem != nil && m.list.itemSelected {
+				m.prevState = m.state
+				m.state = revokedCertificateView
+				m.title = titles[revokedCertificateView]
+			}
 			cmd = append(cmd, listCmd)
+		}
+	case revokedCertificateView:
+		switch msg := msg.(type) {
+		case tea.WindowSizeMsg:
+			m.help.Width = msg.Width
+		default:
+			revokedCertificateModel, revokedCertificateCmd := m.list.selectedItem.Update(msg)
+			rcm := revokedCertificateModel.(RevokedCertificateModel)
+			m.list.selectedItem = &rcm
+			cmd = append(cmd, revokedCertificateCmd)
 		}
 	case browseView:
 		switch msg := msg.(type) {
@@ -176,12 +199,14 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.help.Width = msg.Width
 		case tea.KeyMsg:
 			if key.Matches(msg, m.keys.Download) {
+				m.prevState = m.state
 				m.state = inputView
 				m.title = titles[m.state]
 				m.input = NewInputModel()
 				return m, m.input.Init()
 			}
 			if key.Matches(msg, m.keys.Browse) {
+				m.prevState = m.state
 				m.state = browseView
 				m.title = titles[m.state]
 				m.browse = NewBrowseModel()
@@ -208,6 +233,12 @@ func (m BaseModel) View() string {
 		title := m.styles.Title.Render(m.title)
 		listInfo := m.list.View()
 		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo)
+	case revokedCertificateView:
+		title := m.styles.Title.Render(m.title)
+		helpMenu := m.help.View(&revokedCertificateKeys)
+		revokedCertificateDetails := m.list.selectedItem.View()
+		height := strings.Count(revokedCertificateDetails, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, revokedCertificateDetails) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case browseView:
 		title := m.styles.Title.Render(m.title)
 		listInfo := m.browse.View()

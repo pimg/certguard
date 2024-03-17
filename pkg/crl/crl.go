@@ -10,6 +10,19 @@ import (
 	"time"
 )
 
+var RevocationReasons = map[int]string{
+	0:  "unspecified",
+	1:  "keyCompromise",
+	2:  "cACompromise",
+	3:  "affiliationChanged",
+	4:  "superseded",
+	5:  "cessationOfOperation",
+	6:  "certificateHold",
+	8:  "removeFromCRL",
+	9:  "priviledgeWithdrawn",
+	10: "aACompromise",
+}
+
 func FetchRevocationList(revocationListURL string) (*x509.RevocationList, error) {
 	client := http.Client{Timeout: 5 * time.Second}
 	response, err := client.Get(revocationListURL)
