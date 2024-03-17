@@ -11,7 +11,7 @@ import (
 func TestInitialState(t *testing.T) {
 	baseModel := NewBaseModel()
 
-	assert.Equal(t, sessionState(baseView), baseModel.state)
+	assert.Equal(t, baseView, baseModel.state)
 	assert.Equal(t, titles[baseView], baseModel.title)
 	assert.Equal(t, keys, baseModel.keys)
 }
@@ -21,7 +21,7 @@ func TestSwitchToInputModel(t *testing.T) {
 
 	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Download))
 
-	assert.Equal(t, sessionState(inputView), updatedModel.(BaseModel).state)
+	assert.Equal(t, inputView, updatedModel.(BaseModel).state)
 	assert.Equal(t, titles[inputView], updatedModel.(BaseModel).title)
 }
 
@@ -30,12 +30,12 @@ func TestSwitchBackToBaseModel(t *testing.T) {
 
 	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Download))
 
-	assert.Equal(t, sessionState(inputView), updatedModel.(BaseModel).state)
+	assert.Equal(t, inputView, updatedModel.(BaseModel).state)
 	assert.Equal(t, titles[inputView], updatedModel.(BaseModel).title)
 
 	updatedModel, _ = updatedModel.Update(keyBindingToKeyMsg(keys.Back))
 
-	assert.Equal(t, sessionState(baseView), updatedModel.(BaseModel).state)
+	assert.Equal(t, baseView, updatedModel.(BaseModel).state)
 	assert.Equal(t, titles[baseView], updatedModel.(BaseModel).title)
 }
 

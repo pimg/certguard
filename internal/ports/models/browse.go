@@ -67,6 +67,7 @@ func NewBrowseModel() BrowseModel {
 	fp.Styles.File = browseStyle.FilePickerFile
 	fp.Styles.Selected = browseStyle.FilePickerCurrent
 	fp.Styles.Cursor = browseStyle.FilePickerFile
+	fp.KeyMap.Back = key.NewBinding(key.WithKeys("h", "backspace", "left"), key.WithHelp("h", "back"))
 
 	fp.CurrentDirectory = adapter.GlobalCache.(*adapter.FileCache).Dir()
 
@@ -96,6 +97,8 @@ func (m BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.selectedFile = path
 
 		cmd := commands.LoadCRL(m.selectedFile)
+		m.selectedFile = ""
+		m.filepicker.Path = ""
 		return m, cmd
 	}
 
