@@ -27,5 +27,6 @@ A MAKE file has been included for convenience:
 - `make run` builds and run the `certguard` application in `debug` mode
 - `make test` runs all unit tests
 - `make lint` runs the linter 
+- `make build` builds the binary file `cg`
 
 Since a TUI application cannot log to `stdout` a `debug.log` file is used for debug logging. It is located at: `~/.local/share/certguard/debug.log`
