@@ -8,24 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockCache struct {
-	filename    string
-	fileContent []byte
-}
-
-func (m *mockCache) Write(filename string, fileContent []byte) error {
-	m.filename = filename
-	m.fileContent = fileContent
-
-	return nil
-}
-
-func (m *mockCache) Read(filename string) ([]byte, error) {
-	return m.fileContent, nil
-}
-
 func TestCRL(t *testing.T) {
-	adapter.GlobalCache = &mockCache{}
+	adapter.GlobalCache = &adapter.MockCache{}
 
 	testURL := "http://crl.quovadisglobal.com/pkioprivservg1.crl"
 

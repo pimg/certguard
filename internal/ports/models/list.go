@@ -58,6 +58,8 @@ func (i item) Title() string       { return i.serialnumber }
 func (i item) Description() string { return i.revocationDate }
 func (i item) FilterValue() string { return i.serialnumber }
 
+const TOP_INFO_HEIGHT = 12
+
 type ListModel struct {
 	keys         listKeyMap
 	styles       *styles.Styles
@@ -75,7 +77,7 @@ func NewListModel(crl *x509.RevocationList, width, height int) ListModel {
 	defaultDelegate.Styles.SelectedTitle = defaultDelegate.Styles.SelectedTitle.Foreground(c).BorderLeftForeground(c)
 	defaultDelegate.Styles.SelectedDesc = defaultDelegate.Styles.SelectedTitle.Copy()
 
-	revokedList := list.New(items, defaultDelegate, width, height-12)
+	revokedList := list.New(items, defaultDelegate, width, height-TOP_INFO_HEIGHT)
 	revokedList.Title = "Revoked Certificates"
 	revokedList.KeyMap.Quit = key.NewBinding(key.WithKeys("ctrl+c"), key.WithHelp("ctrl-c", "quit"))
 	revokedList.KeyMap.ClearFilter = key.NewBinding(key.WithKeys("ctrl+q"), key.WithHelp("ctrl-q", "clear"))
@@ -123,6 +125,8 @@ func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		default:
 			l.itemSelected = false
 		}
+	case tea.WindowSizeMsg:
+		l.list.SetSize(msg.Width, msg.Height-TOP_INFO_HEIGHT)
 	}
 
 	l.list, cmd = l.list.Update(msg)
