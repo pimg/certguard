@@ -1,0 +1,13 @@
+@startuml
+[*] --> Base
+Base --> Download: d
+Base --> BrowseCache: b
+BrowseCache --> List: select file
+List --> ViewEntry: select entry
+ViewEntry --> List: back
+ViewEntry --> Base: home
+List --> BrowseCache: back
+List --> Base: home
+BrowseCache --> Base: back, home
+Download --> Base: back, home
+@enduml
