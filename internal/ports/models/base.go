@@ -13,6 +13,8 @@ import (
 
 type sessionState int
 
+// TODO consider making a history []sessionState that acts like a stack
+
 const (
 	baseView sessionState = iota
 	inputView
@@ -113,9 +115,6 @@ func (m BaseModel) Init() tea.Cmd {
 }
 
 func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd []tea.Cmd
-
-	// global key switches
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -129,7 +128,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
-		case key.Matches(msg, m.keys.Home):
+		case key.Matches(msg, m.keys.Home) && m.state != inputView:
 			m.prevState = m.state
 			m.state = baseView
 			m.title = titles[baseView]
@@ -147,56 +146,38 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list = NewListModel(msg.RevocationList, m.width, m.height)
 	}
 
-	// state specific actions
+	return m.handleStates(msg)
+}
+
+// state specific actions
+func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd []tea.Cmd
 	switch m.state {
 	case inputView:
-		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			m.help.Width = msg.Width
-		default:
-			inputModel, inputCmd := m.input.Update(msg)
-			m.input = inputModel.(InputModel)
-			cmd = append(cmd, inputCmd)
-		}
+		inputModel, inputCmd := m.input.Update(msg)
+		m.input = inputModel.(InputModel)
+		cmd = append(cmd, inputCmd)
 	case listView:
-		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			m.help.Width = msg.Width
-			m.list.list.SetSize(msg.Width, msg.Height)
-		default:
-			listModel, listCmd := m.list.Update(msg)
-			m.list = listModel.(ListModel)
+		listModel, listCmd := m.list.Update(msg)
+		m.list = listModel.(ListModel)
 
-			if m.list.selectedItem != nil && m.list.itemSelected {
-				m.prevState = m.state
-				m.state = revokedCertificateView
-				m.title = titles[revokedCertificateView]
-			}
-			cmd = append(cmd, listCmd)
+		if m.list.selectedItem != nil && m.list.itemSelected {
+			m.prevState = m.state
+			m.state = revokedCertificateView
+			m.title = titles[revokedCertificateView]
 		}
+		cmd = append(cmd, listCmd)
 	case revokedCertificateView:
-		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			m.help.Width = msg.Width
-		default:
-			revokedCertificateModel, revokedCertificateCmd := m.list.selectedItem.Update(msg)
-			rcm := revokedCertificateModel.(RevokedCertificateModel)
-			m.list.selectedItem = &rcm
-			cmd = append(cmd, revokedCertificateCmd)
-		}
+		revokedCertificateModel, revokedCertificateCmd := m.list.selectedItem.Update(msg)
+		rcm := revokedCertificateModel.(RevokedCertificateModel)
+		m.list.selectedItem = &rcm
+		cmd = append(cmd, revokedCertificateCmd)
 	case browseView:
-		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			m.help.Width = msg.Width
-		default:
-			browseModel, browseCmd := m.browse.Update(msg)
-			m.browse = browseModel.(BrowseModel)
-			cmd = append(cmd, browseCmd)
-		}
+		browseModel, browseCmd := m.browse.Update(msg)
+		m.browse = browseModel.(BrowseModel)
+		cmd = append(cmd, browseCmd)
 	case baseView:
 		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			m.help.Width = msg.Width
 		case tea.KeyMsg:
 			if key.Matches(msg, m.keys.Download) {
 				m.prevState = m.state
@@ -219,7 +200,6 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m BaseModel) View() string {
-	helpView := m.help.View(&keys)
 	errorMsg := ""
 
 	switch m.state {
@@ -250,7 +230,7 @@ func (m BaseModel) View() string {
 		if m.err != nil {
 			errorMsg = m.err.Error()
 		}
-		helpMenu := helpView
+		helpMenu := m.help.View(&keys)
 		height := strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	}
