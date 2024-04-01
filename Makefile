@@ -13,3 +13,7 @@ lint:
 @PHONY: build
 build:
 	go build -o cg
+
+@PHONY: gif
+gif:
+	vhs cassette.tape
