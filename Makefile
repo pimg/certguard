@@ -15,5 +15,5 @@ build:
 	go build -o cg
 
 @PHONY: gif
-gif:
+gif: build
 	vhs cassette.tape
