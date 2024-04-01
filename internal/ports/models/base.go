@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -230,8 +231,11 @@ func (m BaseModel) View() string {
 		if m.err != nil {
 			errorMsg = m.err.Error()
 		}
+		downloadHelp := m.styles.BaseText.Render("Download a CRL file: ") + "Ctrl-d"
+		browseHelp := m.styles.BaseText.Render("Browse local CRL cache: ") + "Ctrl-b"
+		mainMenu := fmt.Sprintf("%s\n%s\n", downloadHelp, browseHelp)
 		helpMenu := m.help.View(&keys)
 		height := strings.Count(title, "\n")
-		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, mainMenu) + lipgloss.Place(m.width, m.height-height-4, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	}
 }
