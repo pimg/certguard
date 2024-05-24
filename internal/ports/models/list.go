@@ -75,7 +75,7 @@ func NewListModel(crl *x509.RevocationList, width, height int) ListModel {
 	defaultDelegate := list.NewDefaultDelegate()
 	c := styles.DefaultStyles().ListComponentTitle
 	defaultDelegate.Styles.SelectedTitle = defaultDelegate.Styles.SelectedTitle.Foreground(c).BorderLeftForeground(c)
-	defaultDelegate.Styles.SelectedDesc = defaultDelegate.Styles.SelectedTitle.Copy()
+	defaultDelegate.Styles.SelectedDesc = defaultDelegate.Styles.SelectedTitle
 
 	revokedList := list.New(items, defaultDelegate, width, height-TOP_INFO_HEIGHT)
 	revokedList.Title = "Revoked Certificates"
