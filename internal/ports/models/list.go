@@ -134,14 +134,14 @@ func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (l ListModel) View() string {
-	issuer := fmt.Sprintf("CRL Issuer          : %s", l.crl.Issuer)
-	updatedAt := fmt.Sprintf("Updated At          : %s", l.crl.ThisUpdate)
-	nextUpdate := fmt.Sprintf("Next Update         : %s", l.crl.NextUpdate)
-	revokedCertCount := fmt.Sprintf("Revoked Certificates: %d", len(l.crl.RevokedCertificateEntries))
+	issuer := l.styles.CRLText.Render("CRL Issuer: ") + l.crl.Issuer.CommonName
+	updatedAt := l.styles.CRLText.Render("Updated At: ") + l.crl.ThisUpdate.String()
+	nextUpdate := l.styles.CRLText.Render("Next Update: ") + l.crl.NextUpdate.String()
+	revokedCertCount := l.styles.CRLText.Render("Revoked Certificates: ") + strconv.Itoa(len(l.crl.RevokedCertificateEntries))
 	revokedList := l.list.View()
 
 	crlInfo := l.styles.Text.Render(
-		fmt.Sprintf("%s\n%s\n%s\n%s", issuer, updatedAt, nextUpdate, revokedCertCount),
+		fmt.Sprintf("%s%s%s%s", issuer, updatedAt, nextUpdate, revokedCertCount),
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Top, crlInfo, revokedList)
