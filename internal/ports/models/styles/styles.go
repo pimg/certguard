@@ -12,6 +12,7 @@ type Styles struct {
 	Text                   lipgloss.Style
 	BaseText               lipgloss.Style
 	RevokedCertificateText lipgloss.Style
+	CRLText                lipgloss.Style
 	FilePickerFile         lipgloss.Style
 	FilePickerCurrent      lipgloss.Style
 	ListComponentTitle     lipgloss.Color
@@ -31,6 +32,7 @@ func DefaultStyles() *Styles {
 		ErrorMessages:          lipgloss.NewStyle().Background(lipgloss.Color("#FB4934")).BorderForeground(lipgloss.Color("#FB4934")).BorderStyle(lipgloss.NormalBorder()).Width(80).Padding(1),
 		Text:                   lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).Padding(1).Width(80),
 		RevokedCertificateText: lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingTop(1).PaddingLeft(1).Width(20),
+		CRLText:                lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingTop(1).PaddingLeft(1).Width(25),
 		BaseText:               lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingLeft(1).Width(25),
 		FilePickerFile:         lipgloss.NewStyle().Foreground(lipgloss.Color("#83A598")),
 		FilePickerCurrent:      lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
