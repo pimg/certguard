@@ -33,7 +33,7 @@ func DefaultStyles() *Styles {
 		Text:                   lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).Padding(1).Width(80),
 		RevokedCertificateText: lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingTop(1).PaddingLeft(1).Width(20),
 		CRLText:                lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingTop(1).PaddingLeft(1).Width(25),
-		BaseText:               lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingLeft(1).Width(25),
+		BaseText:               lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingLeft(1).Width(48),
 		FilePickerFile:         lipgloss.NewStyle().Foreground(lipgloss.Color("#83A598")),
 		FilePickerCurrent:      lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
 		ListComponentTitle:     "#83A598",

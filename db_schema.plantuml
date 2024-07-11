@@ -1,0 +1,36 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class certificate_revocation_list {
+   name: text
+   signature: blob
+   this_update: date
+   next_update: date
+   url: text
+   raw: blob
+   id: integer
+}
+class gorp_migrations {
+   applied_at: datetime
+   id: varchar(255)
+}
+class revoked_certificate {
+   serialnumber: text
+   revocation_date: date
+   reason: text
+   revocation_list: integer
+   id: integer
+}
+class sqlite_master {
+   type: text
+   name: text
+   tbl_name: text
+   rootpage: int
+   sql: text
+}
+
+revoked_certificate          -[#595959,plain]-^  certificate_revocation_list : "revocation_list:id"
+@enduml

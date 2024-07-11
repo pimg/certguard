@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pimg/certguard/internal/adapter"
 	"github.com/pimg/certguard/internal/ports/models/messages"
+	"github.com/pimg/certguard/pkg/domain/crl"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,14 +43,14 @@ func TestSwitchBackToBaseModel(t *testing.T) {
 }
 
 func TestSwitchToBrowseModel(t *testing.T) {
-	_, err := adapter.NewFileCache()
+	_, err := crl.NewMockStorage()
 	assert.NoError(t, err)
 	baseModel := NewBaseModel()
 
-	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Browse))
+	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Import))
 
-	assert.Equal(t, browseView, updatedModel.(BaseModel).state)
-	assert.Equal(t, titles[browseView], updatedModel.(BaseModel).title)
+	assert.Equal(t, importView, updatedModel.(BaseModel).state)
+	assert.Equal(t, titles[importView], updatedModel.(BaseModel).title)
 }
 
 func TestSwitchToListModel(t *testing.T) {

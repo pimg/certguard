@@ -17,3 +17,7 @@ build:
 @PHONY: gif
 gif: build
 	vhs cassette.tape
+
+@PHONY: sqlc
+sqlc:
+	sqlc generate -f internal/adapter/db/sqlc.yaml

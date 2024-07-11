@@ -5,11 +5,11 @@ import (
 	"net/url"
 )
 
-func ValidateURI(rawURI string) error {
-	_, err := url.ParseRequestURI(rawURI)
+func ValidateURI(rawURI string) (*url.URL, error) {
+	url, err := url.ParseRequestURI(rawURI)
 	if err != nil {
-		return fmt.Errorf("URI must start with either: 'http://', 'https://' or 'file://' the provided string: %s is not a valid URI: %s", rawURI, err)
+		return nil, fmt.Errorf("URI must start with either: 'http://', 'https://' or 'file://' the provided string: %s is not a valid URI: %s", rawURI, err)
 	}
 
-	return nil
+	return url, nil
 }
