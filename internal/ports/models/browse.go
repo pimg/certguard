@@ -1,30 +1,32 @@
 package models
 
 import (
-	"errors"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pimg/certguard/internal/adapter"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/pimg/certguard/internal/ports/models/commands"
+	"github.com/pimg/certguard/internal/ports/models/messages"
 	"github.com/pimg/certguard/internal/ports/models/styles"
 )
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
 type browseKeyMap struct {
-	filepicker.KeyMap
-	Back key.Binding
-	Quit key.Binding
+	table.KeyMap
+	Back  key.Binding
+	Quit  key.Binding
+	Enter key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k *browseKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Back, k.Quit}
+	return []key.Binding{k.Back, k.Quit, k.LineUp, k.LineDown, k.Enter}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -32,12 +34,11 @@ func (k *browseKeyMap) ShortHelp() []key.Binding {
 func (k *browseKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Back, k.Quit},
-		{k.Up, k.Down},
-		{k.Open, k.Select},
+		{k.LineUp, k.LineDown},
+		{k.GotoTop, k.GotoBottom},
+		{k.Enter},
 	}
 }
-
-type clearErrorMsg struct{}
 
 var browseKeys = browseKeyMap{
 	Back: key.NewBinding(
@@ -48,86 +49,77 @@ var browseKeys = browseKeyMap{
 		key.WithKeys("q", "ctrl+c"),
 		key.WithHelp("q", "quit"),
 	),
-	KeyMap: filepicker.DefaultKeyMap(),
+	Enter: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "select row"),
+	),
+	KeyMap: table.DefaultKeyMap(),
 }
 
 type BrowseModel struct {
-	keys         browseKeyMap
-	styles       *styles.Styles
-	filepicker   filepicker.Model
-	selectedFile string
-	err          error
+	table table.Model
 }
 
-func NewBrowseModel() BrowseModel {
-	browseStyle := styles.DefaultStyles()
-	fp := filepicker.New()
-	fp.AllowedTypes = []string{".crl", ".pem", ".crt"}
-	fp.ShowPermissions = false
-	fp.Styles.File = browseStyle.FilePickerFile
-	fp.Styles.Selected = browseStyle.FilePickerCurrent
-	fp.Styles.Cursor = browseStyle.FilePickerFile
-	fp.KeyMap.Back = key.NewBinding(key.WithKeys("h", "backspace", "left"), key.WithHelp("h", "back"))
+func NewBrowseModel(height int) *BrowseModel {
+	columns := []table.Column{
+		{Title: "ID", Width: 2},
+		{Title: "Name", Width: 30},
+		{Title: "This Update", Width: 11},
+		{Title: "Next Update", Width: 11},
+		{Title: "Url", Width: 15},
+	}
 
-	fp.CurrentDirectory = adapter.GlobalCache.(*adapter.FileCache).Dir()
+	tbl := table.New(table.WithColumns(columns), table.WithFocused(true), table.WithHeight(height-10), table.WithWidth(80))
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(styles.DefaultStyles().ListComponentTitle).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(styles.DefaultStyles().FilePickerCurrent.GetForeground()).
+		Background(styles.DefaultStyles().BaseText.GetBackground()).
+		Bold(false)
+	tbl.SetStyles(s)
 
-	return BrowseModel{
-		keys:       browseKeys,
-		styles:     styles.DefaultStyles(),
-		filepicker: fp,
+	return &BrowseModel{
+		table: tbl,
 	}
 }
 
-func (m BrowseModel) Init() tea.Cmd {
-	return m.filepicker.Init()
+func (m *BrowseModel) Init() tea.Cmd {
+	return commands.GetCRLsFromStore
 }
 
-func (m BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg.(type) {
-	case clearErrorMsg:
-		m.err = nil
-	}
-
+func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-	m.filepicker, cmd = m.filepicker.Update(msg)
-
-	// Did the user select a file?
-	if didSelect, path := m.filepicker.DidSelectFile(msg); didSelect {
-		// Get the path of the selected file.
-		m.selectedFile = path
-
-		cmd := commands.LoadCRL(m.selectedFile)
-		m.selectedFile = ""
-		m.filepicker.Path = ""
-		return m, cmd
+	switch msg := msg.(type) {
+	case messages.ListCRLsResponseMsg:
+		rows := make([]table.Row, len(msg.CRLs))
+		for i, CRL := range msg.CRLs {
+			rows[i] = table.Row{
+				strconv.Itoa(int(CRL.ID)),
+				CRL.Name,
+				CRL.ThisUpdate.Format(time.DateOnly),
+				CRL.NextUpdate.Format(time.DateOnly),
+				CRL.URL.String(),
+			}
+		}
+		m.table.SetRows(rows)
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			cmd := commands.GetRevokedCertificates(m.table.SelectedRow()[0], m.table.SelectedRow()[1], m.table.SelectedRow()[2], m.table.SelectedRow()[3])
+			return m, cmd
+		}
 	}
-
-	// Did the user select a disabled file?
-	// This is only necessary to display an error to the user.
-	if didSelect, path := m.filepicker.DidSelectDisabledFile(msg); didSelect {
-		// Let's clear the selectedFile and display an error.
-		m.err = errors.New(path + " is not valid.")
-		m.selectedFile = ""
-		return m, tea.Batch(cmd, clearErrorAfter(2*time.Second))
-	}
+	m.table, cmd = m.table.Update(msg)
 
 	return m, cmd
 }
 
-func (m BrowseModel) View() string {
+func (m *BrowseModel) View() string {
 	var s strings.Builder
-	s.WriteString("\n  ")
-	if m.err != nil {
-		s.WriteString(m.filepicker.Styles.DisabledFile.Render(m.err.Error()))
-	} else {
-		s.WriteString("Pick a file:")
-	}
-	s.WriteString("\n\n" + m.filepicker.View() + "\n")
+	s.WriteString("\n\n" + m.table.View() + "\n")
 	return s.String()
-}
-
-func clearErrorAfter(t time.Duration) tea.Cmd {
-	return tea.Tick(t, func(_ time.Time) tea.Msg {
-		return clearErrorMsg{}
-	})
 }

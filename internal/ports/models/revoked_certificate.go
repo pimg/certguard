@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pimg/certguard/internal/ports/models/styles"
-	"github.com/pimg/certguard/pkg/crl"
+	"github.com/pimg/certguard/pkg/domain/crl"
 )
 
 type revokedCertKeyMap struct {

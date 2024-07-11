@@ -20,6 +20,7 @@ const (
 	baseView sessionState = iota
 	inputView
 	listView
+	importView
 	browseView
 	revokedCertificateView
 )
@@ -28,7 +29,8 @@ var titles = map[sessionState]string{
 	baseView:               "CRL inspector",
 	inputView:              "Download a new CRL by entering it's URL",
 	listView:               "Pick an entry from the CRL to inspect",
-	browseView:             "View and select a CRL from the local cache",
+	importView:             "Import an existing CRL, from the file system",
+	browseView:             "Browse all loaded CRL's from storage",
 	revokedCertificateView: "Revoked Certificate",
 }
 
@@ -39,6 +41,7 @@ type keyMap struct {
 	Download key.Binding
 	Back     key.Binding
 	Home     key.Binding
+	Import   key.Binding
 	Browse   key.Binding
 	Quit     key.Binding
 }
@@ -53,7 +56,7 @@ func (k *keyMap) ShortHelp() []key.Binding {
 // key.Map interface.
 func (k *keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Download, k.Browse, k.Home},
+		{k.Download, k.Import, k.Home},
 		{k.Back, k.Help, k.Quit},
 	}
 }
@@ -71,9 +74,13 @@ var keys = keyMap{
 		key.WithKeys("h"),
 		key.WithHelp("h", "back to the main view"),
 	),
+	Import: key.NewBinding(
+		key.WithKeys("i"),
+		key.WithHelp("i", "import crl from local import directory"),
+	),
 	Browse: key.NewBinding(
 		key.WithKeys("b"),
-		key.WithHelp("b", "browse local cache"),
+		key.WithHelp("b", "browse all loaded CRL's from storage"),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
@@ -86,18 +93,19 @@ var keys = keyMap{
 }
 
 type BaseModel struct {
-	title     string
-	state     sessionState
-	prevState sessionState
-	keys      keyMap
-	help      help.Model
-	styles    *styles.Styles
-	input     InputModel
-	list      ListModel
-	browse    BrowseModel
-	err       error
-	width     int
-	height    int
+	title       string
+	state       sessionState
+	prevState   sessionState
+	keys        keyMap
+	help        help.Model
+	styles      *styles.Styles
+	input       InputModel
+	browse      *BrowseModel
+	list        ListModel
+	importModel ImportModel
+	err         error
+	width       int
+	height      int
 }
 
 func NewBaseModel() BaseModel {
@@ -173,9 +181,13 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 		rcm := revokedCertificateModel.(RevokedCertificateModel)
 		m.list.selectedItem = &rcm
 		cmd = append(cmd, revokedCertificateCmd)
+	case importView:
+		importModel, importCmd := m.importModel.Update(msg)
+		m.importModel = importModel.(ImportModel)
+		cmd = append(cmd, importCmd)
 	case browseView:
 		browseModel, browseCmd := m.browse.Update(msg)
-		m.browse = browseModel.(BrowseModel)
+		m.browse = browseModel.(*BrowseModel)
 		cmd = append(cmd, browseCmd)
 	case baseView:
 		switch msg := msg.(type) {
@@ -187,11 +199,18 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.input = NewInputModel()
 				return m, m.input.Init()
 			}
+			if key.Matches(msg, m.keys.Import) {
+				m.prevState = m.state
+				m.state = importView
+				m.title = titles[m.state]
+				m.importModel = NewImportModel()
+				return m, m.importModel.Init()
+			}
 			if key.Matches(msg, m.keys.Browse) {
 				m.prevState = m.state
 				m.state = browseView
 				m.title = titles[m.state]
-				m.browse = NewBrowseModel()
+				m.browse = NewBrowseModel(m.height)
 				return m, m.browse.Init()
 			}
 		}
@@ -220,22 +239,29 @@ func (m BaseModel) View() string {
 		revokedCertificateDetails := m.list.selectedItem.View()
 		height := strings.Count(revokedCertificateDetails, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, revokedCertificateDetails) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
-	case browseView:
+	case importView:
 		title := m.styles.Title.Render(m.title)
-		listInfo := m.browse.View()
-		helpMenu := m.help.View(&browseKeys)
+		listInfo := m.importModel.View()
+		helpMenu := m.help.View(&listKeys)
 		height := strings.Count(listInfo, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
+	case browseView:
+		title := m.styles.Title.Render(m.title)
+		table := m.browse.View()
+		helpMenu := m.help.View(&browseKeys)
+		height := strings.Count(table, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, table) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	default:
 		title := m.styles.Title.Render(m.title)
 		if m.err != nil {
 			errorMsg = m.err.Error()
 		}
-		downloadHelp := m.styles.BaseText.Render("Download a CRL file: ") + "Ctrl-d"
-		browseHelp := m.styles.BaseText.Render("Browse local CRL cache: ") + "Ctrl-b"
-		mainMenu := fmt.Sprintf("%s\n%s\n", downloadHelp, browseHelp)
+		downloadHelp := m.styles.BaseText.Render("Download a CRL file: ") + "d"
+		importHelp := m.styles.BaseText.Render("Import a CRL file from local import directory: ") + "i"
+		browseHelp := m.styles.BaseText.Render("Browse all loaded CRL's from storage") + "b"
+		mainMenu := fmt.Sprintf("%s\n%s\n%s", downloadHelp, importHelp, browseHelp)
 		helpMenu := m.help.View(&keys)
 		height := strings.Count(title, "\n")
-		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, mainMenu) + lipgloss.Place(m.width, m.height-height-4, lipgloss.Left, lipgloss.Bottom, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, mainMenu) + lipgloss.Place(m.width, m.height-height-5, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	}
 }

@@ -2,6 +2,10 @@
 [*] --> Base
 Base --> Download: d
 Base --> BrowseCache: b
+Base --> Import: i
+Import --> Base: back, home
+Import --> List: <select CRL>
+List --> Import: Back
 BrowseCache --> List: select file
 List --> ViewEntry: select entry
 ViewEntry --> List: back
@@ -10,4 +14,6 @@ List --> BrowseCache: back
 List --> Base: home
 BrowseCache --> Base: back, home
 Download --> Base: back, home
+Download --> List: <download>
+List --> Download: back
 @enduml

@@ -82,12 +82,12 @@ func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, i.keys.Enter):
 			confirmedInput := i.textinput.Value()
 			i.textinput.Reset()
-			err := uri.ValidateURI(confirmedInput)
+			url, err := uri.ValidateURI(confirmedInput)
 			if err != nil {
 				i.textinput.Err = err
 				return i, nil
 			}
-			cmd = commands.GetCRL(confirmedInput)
+			cmd = commands.GetCRL(url)
 			return i, cmd
 		}
 

@@ -60,6 +60,7 @@ func (i item) FilterValue() string { return i.serialnumber }
 
 const TOP_INFO_HEIGHT = 12
 
+// TODO refactor model to not use x509.RevocationList but a domain model or refactor commands/revoked_certificate to return a x.509 revoked certificate
 type ListModel struct {
 	keys         listKeyMap
 	styles       *styles.Styles

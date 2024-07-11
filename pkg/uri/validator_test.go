@@ -35,7 +35,7 @@ func TestURIValidator(t *testing.T) {
 
 		t.Run(tc.input, func(t *testing.T) {
 			t.Parallel()
-			err := ValidateURI(tc.input)
+			_, err := ValidateURI(tc.input)
 
 			if tc.wantErr {
 				assert.NotNil(t, err)
