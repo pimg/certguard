@@ -7,7 +7,7 @@ Enter
 Sleep 1s
 Type "d"
 Sleep 1s
-Type "http://crl.quovadisglobal.com/pkioprivservg1.crl"
+Type "http://crl.digicert.eu/DigiCertQuoVadisPKIoverheidPrivateServicesCA-2023.crl"
 Sleep 700ms
 Enter
 Sleep 1.5s
@@ -23,6 +23,17 @@ Type "h"
 Sleep 1s
 Type "b"
 Sleep 1s
+Type "j"
+Sleep 300ms
+Type "j"
+Sleep 300ms
+Type "j"
+Sleep 300ms
+Type "k"
+Sleep 300ms
+Type "k"
+Sleep 300ms
+Type "k"
 Enter
 Sleep 1s
 Type "j"
@@ -33,6 +44,18 @@ Type "j"
 Sleep 300ms
 Enter
 Sleep 4s
+Type "h"
+Type "i"
+Sleep 1s
+Enter
+Sleep 1.5s
+Type "j"
+Sleep 300ms
+Type "j"
+Sleep 300ms
+Type "j"
+Enter
+Sleep 1.5s
 Type "h"
 Sleep 1.5s
 Type "q"
