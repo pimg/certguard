@@ -101,11 +101,11 @@ func (s *LibSqlStorage) List(ctx context.Context) ([]*crl.CertificateRevocationL
 		cRLs[i] = &crl.CertificateRevocationList{
 			ID:         dbCrl.ID,
 			Name:       dbCrl.Name,
-			Signature:  dbCrl.Signature, // TODO this query should not return Signature??
+			Signature:  dbCrl.Signature,
 			ThisUpdate: thisUpdate,
 			NextUpdate: nextUpdate,
-			Raw:        dbCrl.Raw, // TODO this query should not return raw
-			URL:        url,       // TODO convert to URL
+			Raw:        dbCrl.Raw,
+			URL:        url, // TODO convert to URL
 		}
 	}
 
