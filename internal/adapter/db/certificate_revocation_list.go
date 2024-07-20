@@ -113,17 +113,13 @@ func (s *LibSqlStorage) List(ctx context.Context) ([]*crl.CertificateRevocationL
 }
 
 // save revoked certificates
+// nolint: errcheck // checking err in defer results in panic
 func (s *LibSqlStorage) SaveRevokedCertificates(ctx context.Context, revocationListId int64, revokedCertificates []x509.RevocationListEntry) (int, error) {
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return 0, err
 	}
-	defer func(tx *sql.Tx) {
-		err := tx.Rollback()
-		if err != nil {
-			log.Panicf("could not rollback transaction: %s", err)
-		}
-	}(tx)
+	defer tx.Rollback()
 
 	qtx := s.Queries.WithTx(tx)
 
