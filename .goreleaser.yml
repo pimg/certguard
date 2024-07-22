@@ -7,11 +7,103 @@ before:
 gomod:
   proxy: true
 
+env:
+  - CGO_ENABLED=1
 builds:
-  - env: ["CGO_ENABLED=1"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    flags: ["-trimpath"]
-    targets: ["go_first_class"]
+  - id: dmd-darwin-amd64
+    binary: cg
+    goarch:
+      - amd64
+    goos:
+      - darwin
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
+    flags:
+      - -trimpath
+
+  - id: dmd-darwin-arm64
+    binary: dmd
+    main: ./cmd/dmd
+    goarch:
+      - arm64
+    goos:
+      - darwin
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    flags:
+      - -trimpath
+  - id: dmd-linux-amd64
+    binary: cg
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
+    goarch:
+      - amd64
+    goos:
+      - linux
+    flags:
+      - -trimpath
+    ldflags:
+      - -extldflags "-lc -lrt -lpthread --static"
+  - id: dmd-linux-arm64
+    binary: dmd
+    main: ./cmd/dmd
+    goarch:
+      - arm64
+    goos:
+      - linux
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -trimpath
+    ldflags:
+      - -extldflags "-lc -lrt -lpthread --static"
+  - id: dmd-windows-amd64
+    binary: cg
+    goarch:
+      - amd64
+    goos:
+      - windows
+    env:
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    flags:
+      - -trimpath
+      - -buildmode=exe
+
+universal_binaries:
+  - id: dmd-darwin-universal
+    ids:
+      - dmd-darwin-amd64
+      - dmd-darwin-arm64
+    replace: true
+    name_template: "dmd"
+archives:
+  - id: w/version
+    builds:
+      - dmd-darwin-universal
+      - dmd-linux-amd64
+      - dmd-linux-arm64
+      - dmd-windows-amd64
+    name_template: "dmd_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: false
+    format: zip
+    files:
+      - none*
+  - id: wo/version
+    builds:
+      - dmd-darwin-universal
+      - dmd-linux-amd64
+      - dmd-linux-arm64
+      - dmd-windows-amd64
+    name_template: "dmd_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: false
+    format: zip
+    files:
+      - none*
 
 changelog:
   sort: asc
