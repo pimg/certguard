@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - name: GCC multilib
         run: |
-          sudo apt-get install gcc-multilib g++-multilib
+          sudo apt-get install build-essential
       - uses: actions/setup-go@v5
         with:
           go-version: stable
