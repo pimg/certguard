@@ -7,93 +7,51 @@ before:
 gomod:
   proxy: true
 
-env:
-  - CGO_ENABLED=1
 builds:
-  - id: cg-darwin
+  - id: darwin-amd64
+    main: ./
+    binary: cg
     goos:
       - darwin
     goarch:
       - amd64
-      - arm64
-    ldflags:
-      - -s -w
-    flags:
-      - -trimpath
-      - -buildmode=pie
     env:
-      - CGO_ENABLED=1
-      - >-
-        {{- if eq .Os "darwin" }}
-          {{- if eq .Arch "amd64"}}CC=zig c -target x86_64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
-          {{- if eq .Arch "arm64"}}CC=zig c -target aarch64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
-        {{- end }}
-      - >-
-        {{- if eq .Os "darwin" }}
-          {{- if eq .Arch "amd64"}}CC=zig c++ -target x86_64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
-          {{- if eq .Arch "arm64"}}CC=zig c++ -target aarch64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
-        {{- end }}
-
-  - id: cg-linux
+      - PKG_CONFIG_SYSROOT_DIR=/sysroot/macos/amd64
+      - PKG_CONFIG_PATH=/sysroot/macos/amd64/usr/local/lib/pkgconfig
+      - CC=o64-clang
+      - CXX=o64-clang++
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+  - id: linux-armhf
+    main: ./
+    binary: cg
     goos:
       - linux
     goarch:
-      - amd64
-      - arm64
-    ldflags:
-      - -s -w
-    flags:
-      - -trimpath
+      - arm
+    goarm:
+      - 7
     env:
-      - CGO_ENABLED=1
-      - >-
-        {{- if eq .Os "linux" }}
-          {{- if eq .Arch "amd64" }}CC=zig c -target x86_64-linux-musl{{- end }}
-          {{- if eq .Arch "arm64"}}CC=zig c -target aarch64-linux-musl{{- end }}
-        {{- end }}
-      - >-
-        {{- if eq .Os "linux" }}
-          {{- if eq .Arch "amd64" }}CC=zig c++ -target x86_64-linux-musl{{- end }}
-          {{- if eq .Arch "arm64"}}CC=zig c++ -target aarch64-linux-musl{{- end }}
-        {{- end }}
-
-  - id: cg-windows
-    goos:
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    ldflags:
-      - -s -w
+      - CC=arm-linux-gnueabihf-gcc
+      - CXX=arm-linux-gnueabihf-g++
+      - CGO_CFLAGS=--sysroot=/sysroot/linux/armhf
+      - CGO_LDFLAGS=--sysroot=/sysroot/linux/armhf
+      - PKG_CONFIG_SYSROOT_DIR=/sysroot/linux/armhf
+      - PKG_CONFIG_PATH=/sysroot/linux/armhf/opt/vc/lib/pkgconfig:/sysroot/linux/armhf/usr/lib/arm-linux-gnueabihf/pkgconfig:/sysroot/linux/armhf/usr/lib/pkgconfig:/sysroot/linux/armhf/usr/local/lib/pkgconfig
     flags:
-      - -trimpath
-    env:
-      - CGO_ENABLED=1
-      - >-
-        {{- if eq .Os "windows" }}
-          {{- if eq .Arch "amd64" }}CC=zig c -target x86_64-windows-gnu{{- end }}
-          {{- if eq .Arch "arm64"}}CC=zig c -target aarch64-windows-gnu{{- end }}
-        {{- end }}
-      - >-
-        {{- if eq .Os "windows" }}
-          {{- if eq .Arch "amd64" }}CC=zig c++ -target x86_64-windows-gnu{{- end }}
-          {{- if eq .Arch "arm64"}}CC=zig c++ -target aarch64-windows-gnu{{- end }}
-        {{- end }}
-
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Version}}
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of uname.
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
+  - id: cg-cross
+    builds:
+      - darwin-amd64
+      - linux-armhf
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: zip
+    wrap_in_directory: true
 
 changelog:
   sort: asc
