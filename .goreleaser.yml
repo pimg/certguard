@@ -10,80 +10,90 @@ gomod:
 env:
   - CGO_ENABLED=1
 builds:
-  - id: cg-darwin-amd64
-    binary: cg
-    goarch:
-      - amd64
+  - id: cg-darwin
     goos:
       - darwin
-    env:
-      - CC=o64-clang
-      - CXX=o64-clang++
-    flags:
-      - -trimpath
-
-  - id: cg-darwin-arm64
-    binary: cg
-    goarch:
-      - arm64
-    goos:
-      - darwin
-    env:
-      - CC=oa64-clang
-      - CXX=oa64-clang++
-    flags:
-      - -trimpath
-  - id: cg-linux-amd64
-    binary: cg
     goarch:
       - amd64
-    goos:
-      - linux
-    flags:
-      - -trimpath
-    ldflags:
-      - -extldflags "-lc -lrt -lpthread --static"
-  - id: cg-linux-arm64
-    binary: cg
-    goarch:
       - arm64
-    goos:
-      - linux
+    ldflags:
+      - -s -w
     flags:
       - -trimpath
-    ldflags:
-      - -extldflags "-lc -lrt -lpthread --static"
+      - -buildmode=pie
+    env:
+      - CGO_ENABLED=1
+      - >-
+        {{- if eq .Os "darwin" }}
+          {{- if eq .Arch "amd64"}}CC=zig c -target x86_64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig c -target aarch64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
+        {{- end }}
+      - >-
+        {{- if eq .Os "darwin" }}
+          {{- if eq .Arch "amd64"}}CC=zig c++ -target x86_64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig c++ -target aarch64-macos-none -F{{ .Env.SDK_PATH }}/System/Library/Frameworks{{- end }}
+        {{- end }}
 
-universal_binaries:
-  - id: dmd-darwin-universal
-    ids:
-      - dmd-darwin-amd64
-      - dmd-darwin-arm64
-    replace: true
-    name_template: "dmd"
+  - id: cg-linux
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+    flags:
+      - -trimpath
+    env:
+      - CGO_ENABLED=1
+      - >-
+        {{- if eq .Os "linux" }}
+          {{- if eq .Arch "amd64" }}CC=zig c -target x86_64-linux-musl{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig c -target aarch64-linux-musl{{- end }}
+        {{- end }}
+      - >-
+        {{- if eq .Os "linux" }}
+          {{- if eq .Arch "amd64" }}CC=zig c++ -target x86_64-linux-musl{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig c++ -target aarch64-linux-musl{{- end }}
+        {{- end }}
+
+  - id: cg-windows
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+    flags:
+      - -trimpath
+    env:
+      - CGO_ENABLED=1
+      - >-
+        {{- if eq .Os "windows" }}
+          {{- if eq .Arch "amd64" }}CC=zig c -target x86_64-windows-gnu{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig c -target aarch64-windows-gnu{{- end }}
+        {{- end }}
+      - >-
+        {{- if eq .Os "windows" }}
+          {{- if eq .Arch "amd64" }}CC=zig c++ -target x86_64-windows-gnu{{- end }}
+          {{- if eq .Arch "arm64"}}CC=zig c++ -target aarch64-windows-gnu{{- end }}
+        {{- end }}
+
 archives:
-  - id: w/version
-    builds:
-      - dmd-darwin-universal
-      - dmd-linux-amd64
-      - dmd-linux-arm64
-      - dmd-windows-amd64
-    name_template: "dmd_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    wrap_in_directory: false
-    format: zip
-    files:
-      - none*
-  - id: wo/version
-    builds:
-      - dmd-darwin-universal
-      - dmd-linux-amd64
-      - dmd-linux-arm64
-      - dmd-windows-amd64
-    name_template: "dmd_{{ .Os }}_{{ .Arch }}"
-    wrap_in_directory: false
-    format: zip
-    files:
-      - none*
+  - format: tar.gz
+    # this name template makes the OS and Arch compatible with the results of uname.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
+    format_overrides:
+      - goos: windows
+        format: zip
 
 changelog:
   sort: asc
