@@ -10,7 +10,7 @@ gomod:
 env:
   - CGO_ENABLED=1
 builds:
-  - id: dmd-darwin-amd64
+  - id: cg-darwin-amd64
     binary: cg
     goarch:
       - amd64
@@ -22,9 +22,8 @@ builds:
     flags:
       - -trimpath
 
-  - id: dmd-darwin-arm64
-    binary: dmd
-    main: ./cmd/dmd
+  - id: cg-darwin-arm64
+    binary: cg
     goarch:
       - arm64
     goos:
@@ -47,9 +46,8 @@ builds:
       - -trimpath
     ldflags:
       - -extldflags "-lc -lrt -lpthread --static"
-  - id: dmd-linux-arm64
-    binary: dmd
-    main: ./cmd/dmd
+  - id: cg-linux-arm64
+    binary: cg
     goarch:
       - arm64
     goos:
@@ -61,18 +59,6 @@ builds:
       - -trimpath
     ldflags:
       - -extldflags "-lc -lrt -lpthread --static"
-  - id: dmd-windows-amd64
-    binary: cg
-    goarch:
-      - amd64
-    goos:
-      - windows
-    env:
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-    flags:
-      - -trimpath
-      - -buildmode=exe
 
 universal_binaries:
   - id: dmd-darwin-universal
