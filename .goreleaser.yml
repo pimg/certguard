@@ -7,51 +7,83 @@ before:
 gomod:
   proxy: true
 
+env:
+  - CGO_ENABLED=1
 builds:
-  - id: darwin-amd64
-    main: ./
+  - id: cg-darwin-amd64
     binary: cg
-    goos:
-      - darwin
+    main: ./
     goarch:
       - amd64
+    goos:
+      - darwin
     env:
-      - PKG_CONFIG_SYSROOT_DIR=/sysroot/macos/amd64
-      - PKG_CONFIG_PATH=/sysroot/macos/amd64/usr/local/lib/pkgconfig
       - CC=o64-clang
       - CXX=o64-clang++
     flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Version}}
-  - id: linux-armhf
-    main: ./
+      - -trimpath
+
+  - id: cg-darwin-arm64
     binary: cg
+    main: ./
+    goarch:
+      - arm64
+    goos:
+      - darwin
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    flags:
+      - -trimpath
+  - id: cg-linux-amd64
+    binary: cg
+    main: ./
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
+    goarch:
+      - amd64
     goos:
       - linux
-    goarch:
-      - arm
-    goarm:
-      - 7
-    env:
-      - CC=arm-linux-gnueabihf-gcc
-      - CXX=arm-linux-gnueabihf-g++
-      - CGO_CFLAGS=--sysroot=/sysroot/linux/armhf
-      - CGO_LDFLAGS=--sysroot=/sysroot/linux/armhf
-      - PKG_CONFIG_SYSROOT_DIR=/sysroot/linux/armhf
-      - PKG_CONFIG_PATH=/sysroot/linux/armhf/opt/vc/lib/pkgconfig:/sysroot/linux/armhf/usr/lib/arm-linux-gnueabihf/pkgconfig:/sysroot/linux/armhf/usr/lib/pkgconfig:/sysroot/linux/armhf/usr/local/lib/pkgconfig
     flags:
-      - -mod=readonly
+      - -trimpath
     ldflags:
-      - -s -w -X main.version={{.Version}}
-archives:
-  - id: cg-cross
-    builds:
-      - darwin-amd64
-      - linux-armhf
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format: zip
-    wrap_in_directory: true
+      - -extldflags "-lc -lrt -lpthread --static"
+  - id: cg-linux-arm64
+    binary: cg
+    main: ./
+    goarch:
+      - arm64
+    goos:
+      - linux
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -trimpath
+    ldflags:
+      - -extldflags "-lc -lrt -lpthread --static"
+  - id: cg-windows-amd64
+    binary: cg
+    main: ./
+    goarch:
+      - amd64
+    goos:
+      - windows
+    env:
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    flags:
+      - -trimpath
+      - -buildmode=exe
+
+universal_binaries:
+  - id: cg-darwin-universal
+    ids:
+      - cg-darwin-amd64
+      - cg-darwin-arm64
+    replace: true
+    name_template: "cg"
 
 changelog:
   sort: asc
