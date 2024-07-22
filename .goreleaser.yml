@@ -62,7 +62,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -extldflags "-lc -lrt -lpthread --static"
+      - -extldflags "-lc -lrt -lpthread --static -ldl"
   - id: cg-windows-amd64
     binary: cg
     main: ./
