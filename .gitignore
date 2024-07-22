@@ -2,3 +2,5 @@ crl-inspector
 cg
 .idea
 certguard
+.release-env
+dist

@@ -48,7 +48,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -extldflags "-lc -lrt -lpthread --static"
+      - -extldflags "-lc -lrt -lpthread --static -ldl"
   - id: cg-linux-arm64
     binary: cg
     main: ./
@@ -63,19 +63,6 @@ builds:
       - -trimpath
     ldflags:
       - -extldflags "-lc -lrt -lpthread --static -ldl"
-  - id: cg-windows-amd64
-    binary: cg
-    main: ./
-    goarch:
-      - amd64
-    goos:
-      - windows
-    env:
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-    flags:
-      - -trimpath
-      - -buildmode=exe
 
 universal_binaries:
   - id: cg-darwin-universal
