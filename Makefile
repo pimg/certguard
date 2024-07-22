@@ -12,7 +12,7 @@ lint:
 
 @PHONY: build
 build:
-	go build -o cg
+	CGO_ENABLED=1 go build -o cg
 
 @PHONY: gif
 gif: build
