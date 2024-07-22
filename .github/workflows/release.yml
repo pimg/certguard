@@ -20,6 +20,7 @@ jobs:
       - name: GCC multilib
         run: |
           sudo apt-get install gcc-multilib g++-multilib
+          sudo apt-get -y install gcc-aarch64-linux-gnu
       - uses: actions/setup-go@v5
         with:
           go-version: stable
