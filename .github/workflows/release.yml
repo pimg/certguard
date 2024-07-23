@@ -19,7 +19,7 @@ jobs:
           submodules: 'true'
       - run: git fetch --prune --unshallow
       - name: setup dependencies
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
       - name: setup release environment
         run: |-
           echo 'GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}' > .release-env
