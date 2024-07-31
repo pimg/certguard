@@ -1,9 +1,10 @@
-name: golangci-lint
+name: linters
 on:
   push:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   golangci:
@@ -16,3 +17,5 @@ jobs:
           go-version: stable
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
+      - uses: wagoid/commitlint-github-action@v6
+        name: commit linter
