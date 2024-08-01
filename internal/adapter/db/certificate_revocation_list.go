@@ -148,3 +148,13 @@ func (s *LibSqlStorage) SaveRevokedCertificates(ctx context.Context, revocationL
 
 	return rowsAffected, tx.Commit()
 }
+
+// delete certificate revocation list
+func (s *LibSqlStorage) Delete(ctx context.Context, revocationListId int64) error {
+	err := s.Queries.DeleteCertificateRevocationList(ctx, revocationListId)
+	if err != nil {
+		return errors.Join(errors.New("could not Delete CRL from storage "), err)
+	}
+
+	return nil
+}

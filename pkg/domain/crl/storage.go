@@ -10,6 +10,7 @@ type Repository interface {
 	Save(ctx context.Context, crl *CertificateRevocationList) (int64, error)
 	Find(ctx context.Context, name string) (*CertificateRevocationList, error)
 	List(ctx context.Context) ([]*CertificateRevocationList, error)
+	Delete(ctx context.Context, id int64) error
 	SaveRevokedCertificates(ctx context.Context, revocationListId int64, revokedCertificates []x509.RevocationListEntry) (int, error)
 	FindRevokedCertificates(ctx context.Context, revocationListId int64) ([]*RevokedCertificate, error)
 }

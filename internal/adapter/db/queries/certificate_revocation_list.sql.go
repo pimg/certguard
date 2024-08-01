@@ -49,6 +49,16 @@ func (q *Queries) CreateCertificateRevocationList(ctx context.Context, arg Creat
 	return id, err
 }
 
+const deleteCertificateRevocationList = `-- name: DeleteCertificateRevocationList :exec
+DELETE FROM certificate_revocation_list
+WHERE id = ?
+`
+
+func (q *Queries) DeleteCertificateRevocationList(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteCertificateRevocationList, id)
+	return err
+}
+
 const getCertificateRevocationList = `-- name: GetCertificateRevocationList :one
 SELECT id, name, signature, DATETIME(this_update) as this_update, DATETIME(next_update) as next_update, url, raw FROM certificate_revocation_list
 WHERE name = ?

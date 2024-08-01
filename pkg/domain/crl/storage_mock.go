@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 )
 
+// TODO create better mock repository that can be used for testing
 type MockRepository struct{}
 
 func (r *MockRepository) List(_ context.Context) ([]*CertificateRevocationList, error) {
@@ -25,6 +26,10 @@ func (r *MockRepository) SaveRevokedCertificates(_ context.Context, _ int64, _ [
 
 func (r *MockRepository) FindRevokedCertificates(_ context.Context, _ int64) ([]*RevokedCertificate, error) {
 	return []*RevokedCertificate{}, nil
+}
+
+func (r *MockRepository) Delete(_ context.Context, _ int64) error {
+	return nil
 }
 
 func NewMockStorage() (*Storage, error) {

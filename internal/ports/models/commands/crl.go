@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,7 +25,7 @@ func GetCRL(url *url.URL) tea.Cmd {
 		revocationList, err := crl.FetchRevocationList(revocationListURL)
 		if err != nil {
 			errorMsg := fmt.Errorf("could not download CRL with provided URL: %s", url.String())
-			log.Print(errorMsg.Error())
+			log.Println(errorMsg.Error())
 			return messages.ErrorMsg{
 				Err: errors.Join(errorMsg, err),
 			}
@@ -47,7 +48,7 @@ func LoadCRL(path string) tea.Cmd {
 		rawCRL, err := os.ReadFile(path)
 		if err != nil {
 			errorMsg := fmt.Errorf("could not load CRL from cache location: %s", path)
-			log.Print(errorMsg.Error())
+			log.Println(errorMsg.Error())
 			return messages.ErrorMsg{
 				Err: errors.Join(errorMsg, err),
 			}
@@ -55,7 +56,7 @@ func LoadCRL(path string) tea.Cmd {
 
 		revocationList, err := crl.ParseRevocationList(rawCRL)
 		if err != nil {
-			log.Print("could not parse CRL")
+			log.Println("could not parse CRL")
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse CRL"), err),
 			}
@@ -81,5 +82,29 @@ func GetCRLsFromStore() tea.Msg {
 
 	return messages.ListCRLsResponseMsg{
 		CRLs: cRLs,
+	}
+}
+
+func DeleteCRLFromStore(id string) tea.Cmd {
+	ctx := context.Background()
+	return func() tea.Msg {
+		dbID, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			log.Println("could not parse CRL ID, to be used for deletion")
+			return messages.ErrorMsg{
+				Err: errors.Join(errors.New("could not parse CRL ID, to be used for deletion"), err),
+			}
+		}
+		err = domain_crl.GlobalStorage.Repository.Delete(ctx, dbID)
+		if err != nil {
+			log.Println("could not delete CRL")
+			return messages.ErrorMsg{
+				Err: errors.Join(errors.New("could not delete CRL"), err),
+			}
+		}
+
+		return messages.CRLDeleteConfirmationMsg{
+			DeletionSuccessful: true,
+		}
 	}
 }

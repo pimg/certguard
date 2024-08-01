@@ -21,3 +21,7 @@ type ListCRLsResponseMsg struct {
 type RevokedCertificatesMsg struct {
 	RevokedCertificates []x509.RevocationListEntry
 }
+
+type CRLDeleteConfirmationMsg struct {
+	DeletionSuccessful bool
+}
