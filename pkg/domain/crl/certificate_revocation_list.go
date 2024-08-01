@@ -19,7 +19,7 @@ type CertificateRevocationList struct {
 }
 
 // TODO changeto map[int]RevocationReason
-var RevocationReasons = map[int]string{
+var RevocationReasons = map[int]RevocationReason{
 	0:  "unspecified",
 	1:  "keyCompromise",
 	2:  "cACompromise",

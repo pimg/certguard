@@ -74,7 +74,7 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = crl.NewStorage(libsqlStorage, cacheDir) // TODO consider better setup for this
+	_, err = crl.NewStorage(libsqlStorage, cacheDir)
 	if err != nil {
 		return err
 	}
