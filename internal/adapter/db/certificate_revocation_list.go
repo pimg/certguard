@@ -105,7 +105,7 @@ func (s *LibSqlStorage) List(ctx context.Context) ([]*crl.CertificateRevocationL
 			ThisUpdate: thisUpdate,
 			NextUpdate: nextUpdate,
 			Raw:        dbCrl.Raw,
-			URL:        url, // TODO convert to URL
+			URL:        url,
 		}
 	}
 
@@ -133,7 +133,7 @@ func (s *LibSqlStorage) SaveRevokedCertificates(ctx context.Context, revocationL
 		err := qtx.CreateRevokedCertificates(ctx, queries.CreateRevokedCertificatesParams{
 			Serialnumber:   revokedCertificateEntry.SerialNumber.String(),
 			RevocationDate: revokedCertificateEntry.RevocationTime,
-			Reason:         reason,
+			Reason:         reason.String(),
 			RevocationList: revocationListId,
 		})
 		if err != nil {

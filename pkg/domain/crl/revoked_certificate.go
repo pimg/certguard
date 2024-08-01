@@ -11,6 +11,10 @@ type RevokedCertificate struct {
 
 type RevocationReason string
 
+func (r RevocationReason) String() string {
+	return string(r)
+}
+
 const (
 	RevocationReasonUnspecified          RevocationReason = "unspecified"
 	RevocationReasonKeyCompromise        RevocationReason = "keyCompromise"

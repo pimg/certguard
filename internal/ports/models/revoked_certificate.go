@@ -69,7 +69,7 @@ func (r RevokedCertificateModel) View() string {
 	if err != nil {
 		revocationReason = "Unknown revocation reason"
 	} else {
-		revocationReason = r.styles.RevokedCertificateText.Render("Revocation reason: ") + crl.RevocationReasons[revocationReasonCode]
+		revocationReason = r.styles.RevokedCertificateText.Render("Revocation reason: ") + crl.RevocationReasons[revocationReasonCode].String()
 	}
 
 	return fmt.Sprintf("%s%s%s", serialnumber, revocationDate, revocationReason)
