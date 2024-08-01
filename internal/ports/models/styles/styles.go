@@ -16,6 +16,7 @@ type Styles struct {
 	FilePickerFile         lipgloss.Style
 	FilePickerCurrent      lipgloss.Style
 	ListComponentTitle     lipgloss.Color
+	WarningText            lipgloss.Style
 }
 
 func DefaultStyles() *Styles {
@@ -37,5 +38,6 @@ func DefaultStyles() *Styles {
 		FilePickerFile:         lipgloss.NewStyle().Foreground(lipgloss.Color("#83A598")),
 		FilePickerCurrent:      lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
 		ListComponentTitle:     "#83A598",
+		WarningText:            lipgloss.NewStyle().Foreground(lipgloss.Color("#FABD2F")),
 	}
 }

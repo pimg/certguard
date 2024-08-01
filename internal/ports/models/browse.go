@@ -18,15 +18,18 @@ import (
 // key.Map. It could also very easily be a map[string]key.Binding.
 type browseKeyMap struct {
 	table.KeyMap
-	Back  key.Binding
-	Quit  key.Binding
-	Enter key.Binding
+	Back   key.Binding
+	Quit   key.Binding
+	Enter  key.Binding
+	Delete key.Binding
+	Y      key.Binding
+	N      key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k *browseKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Back, k.Quit, k.LineUp, k.LineDown, k.Enter}
+	return []key.Binding{k.Back, k.Quit, k.LineUp, k.LineDown, k.Enter, k.Delete}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -36,7 +39,7 @@ func (k *browseKeyMap) FullHelp() [][]key.Binding {
 		{k.Back, k.Quit},
 		{k.LineUp, k.LineDown},
 		{k.GotoTop, k.GotoBottom},
-		{k.Enter},
+		{k.Enter, k.Delete},
 	}
 }
 
@@ -53,11 +56,26 @@ var browseKeys = browseKeyMap{
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "select row"),
 	),
+	Delete: key.NewBinding(
+		key.WithKeys("delete"),
+		key.WithHelp("delete", "marks a CRL for deletion"),
+	),
+	Y: key.NewBinding(
+		key.WithKeys("y"),
+		key.WithHelp("y", "confirm deletion"),
+	),
+	N: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "cancel deletion"),
+	),
 	KeyMap: table.DefaultKeyMap(),
 }
 
 type BrowseModel struct {
-	table table.Model
+	table             table.Model
+	markedForDeletion string
+	errorMsg          string
+	styles            *styles.Styles
 }
 
 func NewBrowseModel(height int) *BrowseModel {
@@ -83,7 +101,8 @@ func NewBrowseModel(height int) *BrowseModel {
 	tbl.SetStyles(s)
 
 	return &BrowseModel{
-		table: tbl,
+		table:  tbl,
+		styles: styles.DefaultStyles(),
 	}
 }
 
@@ -106,11 +125,27 @@ func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		m.table.SetRows(rows)
+	case messages.CRLDeleteConfirmationMsg:
+		if msg.DeletionSuccessful {
+			m.deleteFromRows()
+		}
+	case messages.ErrorMsg:
+		m.errorMsg = msg.Err.Error()
+		m.markedForDeletion = ""
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
 			cmd := commands.GetRevokedCertificates(m.table.SelectedRow()[0], m.table.SelectedRow()[1], m.table.SelectedRow()[2], m.table.SelectedRow()[3])
 			return m, cmd
+		case "delete":
+			m.markedForDeletion = m.table.SelectedRow()[0]
+		case "n":
+			m.markedForDeletion = ""
+		case "y":
+			if m.markedForDeletion != "" {
+				cmd := commands.DeleteCRLFromStore(m.markedForDeletion)
+				return m, cmd
+			}
 		}
 	}
 	m.table, cmd = m.table.Update(msg)
@@ -118,8 +153,27 @@ func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m *BrowseModel) deleteFromRows() {
+	rows := m.table.Rows()
+	for i, row := range rows {
+		if row[0] == m.markedForDeletion {
+			m.table.SetRows(append(rows[:i], rows[i+1:]...))
+		}
+	}
+	m.markedForDeletion = ""
+}
+
 func (m *BrowseModel) View() string {
 	var s strings.Builder
-	s.WriteString("\n\n" + m.table.View() + "\n")
+
+	if m.markedForDeletion != "" {
+		s.WriteString(m.styles.WarningText.Render("\n\n Do you want to delete CRL : " + m.markedForDeletion + " y(es) n(o)"))
+	}
+
+	if m.errorMsg != "" {
+		s.WriteString(m.styles.WarningText.Render("\n\n" + m.errorMsg))
+	}
+
+	s.WriteString("\n\n" + m.table.View())
 	return s.String()
 }

@@ -27,3 +27,7 @@ WHERE name = ?;
 -- name: ListCertificateRevocationLists :many
 SELECT id, name, signature, DATETIME(this_update) as this_update, DATETIME(next_update) as next_update, url, raw  FROM certificate_revocation_list
 ORDER BY id;
+
+-- name: DeleteCertificateRevocationList :exec
+DELETE FROM certificate_revocation_list
+WHERE id = ?;
