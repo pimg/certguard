@@ -18,7 +18,6 @@ type CertificateRevocationList struct {
 	URL        *url.URL
 }
 
-// TODO changeto map[int]RevocationReason
 var RevocationReasons = map[int]RevocationReason{
 	0:  "unspecified",
 	1:  "keyCompromise",

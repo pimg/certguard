@@ -152,7 +152,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prevState = m.state
 		m.state = listView
 		m.title = titles[listView]
-		m.list = NewListModel(msg.RevocationList, m.width, m.height)
+		m.list = NewListModel(msg.RevocationList, msg.URL, m.width, m.height)
 	}
 
 	return m.handleStates(msg)
