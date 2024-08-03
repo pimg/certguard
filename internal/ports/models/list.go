@@ -2,13 +2,16 @@ package models
 
 import (
 	"crypto/x509"
-	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/internal/ports/models/styles"
 )
 
@@ -16,15 +19,16 @@ import (
 // key.Map. It could also very easily be a map[string]key.Binding.
 type listKeyMap struct {
 	list.KeyMap
-	Back   key.Binding
-	Quit   key.Binding
-	Select key.Binding
+	Back    key.Binding
+	Quit    key.Binding
+	Select  key.Binding
+	Refresh key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
 // of the key.Map interface.
 func (k *listKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Back, k.Quit, k.Select}
+	return []key.Binding{k.Back, k.Quit, k.Select, k.Refresh}
 }
 
 // FullHelp returns keybindings for the expanded help view. It's part of the
@@ -48,6 +52,10 @@ var listKeys = listKeyMap{
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "select"),
 	),
+	Refresh: key.NewBinding(
+		key.WithKeys("r"),
+		key.WithHelp("r", "redownload the CRL if URL is available"),
+	),
 }
 
 type item struct {
@@ -65,11 +73,12 @@ type ListModel struct {
 	styles       *styles.Styles
 	list         list.Model
 	crl          *x509.RevocationList
+	crlUrl       *url.URL
 	selectedItem *RevokedCertificateModel
 	itemSelected bool
 }
 
-func NewListModel(crl *x509.RevocationList, width, height int) ListModel {
+func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int) ListModel {
 	items := revokedCertificatesToItems(crl.RevokedCertificateEntries)
 
 	defaultDelegate := list.NewDefaultDelegate()
@@ -90,6 +99,7 @@ func NewListModel(crl *x509.RevocationList, width, height int) ListModel {
 		styles: styles.DefaultStyles(),
 		list:   revokedList,
 		crl:    crl,
+		crlUrl: URL,
 	}
 }
 
@@ -122,6 +132,11 @@ func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				l.selectedItem = &revokedCertificateModel
 				l.itemSelected = true
 			}
+		case key.Matches(msg, listKeys.Refresh):
+			if l.crl.NextUpdate.Before(time.Now()) {
+				cmd = commands.GetCRL(l.crlUrl)
+				return l, cmd
+			}
 		default:
 			l.itemSelected = false
 		}
@@ -134,15 +149,38 @@ func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (l ListModel) View() string {
-	issuer := l.styles.CRLText.Render("CRL Issuer: ") + l.crl.Issuer.CommonName
-	updatedAt := l.styles.CRLText.Render("Updated At: ") + l.crl.ThisUpdate.String()
-	nextUpdate := l.styles.CRLText.Render("Next Update: ") + l.crl.NextUpdate.String()
-	revokedCertCount := l.styles.CRLText.Render("Revoked Certificates: ") + strconv.Itoa(len(l.crl.RevokedCertificateEntries))
-	revokedList := l.list.View()
+	var s strings.Builder
+
+	renderedCN := l.crl.Issuer.CommonName
+	if len(l.crl.Issuer.CommonName) >= 54 {
+		renderedCN = l.crl.Issuer.CommonName[:50] + "..."
+	}
+	s.WriteString(l.styles.CRLText.Render("CRL Issuer: ") + renderedCN)
+
+	s.WriteString(l.styles.CRLText.Render("Updated At: ") + l.crl.ThisUpdate.String())
+
+	if l.crl.NextUpdate.Before(time.Now()) {
+		s.WriteString(l.styles.CRLText.Render("Next Update: ") + l.styles.WarningText.Render(l.crl.NextUpdate.String()))
+	} else {
+		s.WriteString(l.styles.CRLText.Render("Next Update: ") + l.crl.NextUpdate.String())
+	}
+
+	s.WriteString(l.styles.CRLText.Render("Revoked Certificates: ") + strconv.Itoa(len(l.crl.RevokedCertificateEntries)))
+
+	if l.crlUrl != nil {
+		crlUrl := l.crlUrl.String()
+
+		if len(l.crlUrl.String()) >= 54 {
+			crlUrl = crlUrl[:50] + "..."
+		}
+
+		s.WriteString(l.styles.CRLText.Render("URL: ") + crlUrl)
+	}
 
 	crlInfo := l.styles.Text.Render(
-		fmt.Sprintf("%s%s%s%s", issuer, updatedAt, nextUpdate, revokedCertCount),
+		s.String(),
 	)
 
+	revokedList := l.list.View()
 	return lipgloss.JoinVertical(lipgloss.Top, crlInfo, revokedList)
 }

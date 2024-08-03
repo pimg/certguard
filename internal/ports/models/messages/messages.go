@@ -2,12 +2,14 @@ package messages
 
 import (
 	"crypto/x509"
+	"net/url"
 
 	"github.com/pimg/certguard/pkg/domain/crl"
 )
 
 type CRLResponseMsg struct {
 	RevocationList *x509.RevocationList
+	URL            *url.URL
 }
 
 type ErrorMsg struct {

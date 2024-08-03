@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -16,31 +17,50 @@ import (
 	"github.com/pimg/certguard/pkg/domain/crl"
 )
 
-func GetRevokedCertificates(aID, aCN, aThisUpdate, aNextUpdate string) tea.Cmd {
-	slog.Debug(fmt.Sprintf("getting revoked certificate from storage with ID: %s", aID))
+type GetRevokedCertificatesArgs struct {
+	ID         string
+	CN         string
+	ThisUpdate string
+	NextUpdate string
+	URL        string
+}
+
+func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
+	slog.Debug(fmt.Sprintf("getting revoked certificate from storage with ID: %s", args.ID))
 	ctx := context.Background()
 	return func() tea.Msg {
-		ID, err := strconv.ParseInt(aID, 10, 64)
+		ID, err := strconv.ParseInt(args.ID, 10, 64)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%s is not a valid ID, %v", aID, err))
+			slog.Debug(fmt.Sprintf("%s is not a valid ID, %v", args.ID, err))
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse ID"), err),
 			}
 		}
 
-		thisUpdate, err := time.Parse(time.DateOnly, aThisUpdate)
+		thisUpdate, err := time.Parse(time.DateOnly, args.ThisUpdate)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%s is not a valid time, %v", aThisUpdate, err))
+			slog.Debug(fmt.Sprintf("%s is not a valid time, %v", args.ThisUpdate, err))
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse time of ThisUpdate"), err),
 			}
 		}
 
-		nextUpdate, err := time.Parse(time.DateOnly, aNextUpdate)
+		nextUpdate, err := time.Parse(time.DateOnly, args.NextUpdate)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%s is not a valid time, %v", aNextUpdate, err))
+			slog.Debug(fmt.Sprintf("%s is not a valid time, %v", args.NextUpdate, err))
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse time of NextUpdate"), err),
+			}
+		}
+
+		var URL *url.URL
+		if args.URL != "" {
+			URL, err = url.ParseRequestURI(args.URL)
+			if err != nil {
+				slog.Debug(fmt.Sprintf("%s is not a valid URL, %v", args.URL, err))
+				return messages.ErrorMsg{
+					Err: errors.Join(errors.New("could not parse URL"), err),
+				}
 			}
 		}
 
@@ -74,11 +94,12 @@ func GetRevokedCertificates(aID, aCN, aThisUpdate, aNextUpdate string) tea.Cmd {
 
 		return messages.CRLResponseMsg{
 			RevocationList: &x509.RevocationList{
-				Issuer:                    pkix.Name{CommonName: aCN},
+				Issuer:                    pkix.Name{CommonName: args.CN},
 				ThisUpdate:                thisUpdate,
 				NextUpdate:                nextUpdate,
 				RevokedCertificateEntries: revokedCertificates,
 			},
+			URL: URL,
 		}
 	}
 }

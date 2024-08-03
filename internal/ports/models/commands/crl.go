@@ -38,6 +38,7 @@ func GetCRL(url *url.URL) tea.Cmd {
 
 		return messages.CRLResponseMsg{
 			RevocationList: revocationList,
+			URL:            url,
 		}
 	}
 }
@@ -47,7 +48,7 @@ func LoadCRL(path string) tea.Cmd {
 	return func() tea.Msg {
 		rawCRL, err := os.ReadFile(path)
 		if err != nil {
-			errorMsg := fmt.Errorf("could not load CRL from cache location: %s", path)
+			errorMsg := fmt.Errorf("could not load CRL from import location: %s", path)
 			log.Println(errorMsg.Error())
 			return messages.ErrorMsg{
 				Err: errors.Join(errorMsg, err),

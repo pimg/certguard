@@ -135,7 +135,13 @@ func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			cmd := commands.GetRevokedCertificates(m.table.SelectedRow()[0], m.table.SelectedRow()[1], m.table.SelectedRow()[2], m.table.SelectedRow()[3])
+			cmd := commands.GetRevokedCertificates(&commands.GetRevokedCertificatesArgs{
+				ID:         m.table.SelectedRow()[0],
+				CN:         m.table.SelectedRow()[1],
+				ThisUpdate: m.table.SelectedRow()[2],
+				NextUpdate: m.table.SelectedRow()[3],
+				URL:        m.table.SelectedRow()[4],
+			})
 			return m, cmd
 		case "delete":
 			m.markedForDeletion = m.table.SelectedRow()[0]
