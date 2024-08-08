@@ -6,6 +6,7 @@ import (
 
 type Styles struct {
 	InputField             lipgloss.Style
+	TextArea               lipgloss.Style
 	Title                  lipgloss.Style
 	Background             lipgloss.Style
 	ErrorMessages          lipgloss.Style
@@ -22,6 +23,7 @@ type Styles struct {
 func DefaultStyles() *Styles {
 	return &Styles{
 		InputField: lipgloss.NewStyle().BorderForeground(lipgloss.Color("#83A598")).BorderStyle(lipgloss.NormalBorder()).Padding(1).Width(80),
+		TextArea:   lipgloss.NewStyle().BorderForeground(lipgloss.Color("#83A598")).BorderStyle(lipgloss.NormalBorder()).Padding(1).Width(78),
 		Title: lipgloss.NewStyle().Bold(true).
 			Foreground(lipgloss.Color("#EBDBB2")).
 			Background(lipgloss.Color("#83A598")).
