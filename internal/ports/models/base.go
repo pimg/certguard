@@ -23,6 +23,9 @@ const (
 	importView
 	browseView
 	revokedCertificateView
+	importPemView
+	inputPemView
+	certificateView
 )
 
 var titles = map[sessionState]string{
@@ -32,18 +35,23 @@ var titles = map[sessionState]string{
 	importView:             "Import an existing CRL, from the file system",
 	browseView:             "Browse all loaded CRL's from storage",
 	revokedCertificateView: "Revoked Certificate",
+	importPemView:          "Import a PEM certificate",
+	inputPemView:           "Input a PEM certificate",
+	certificateView:        "view a parsed certificate",
 }
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
 // key.Map. It could also very easily be a map[string]key.Binding.
 type keyMap struct {
-	Help     key.Binding
-	Download key.Binding
-	Back     key.Binding
-	Home     key.Binding
-	Import   key.Binding
-	Browse   key.Binding
-	Quit     key.Binding
+	Help      key.Binding
+	Download  key.Binding
+	Back      key.Binding
+	Home      key.Binding
+	Import    key.Binding
+	Browse    key.Binding
+	InputPem  key.Binding
+	ImportPem key.Binding
+	Quit      key.Binding
 }
 
 // ShortHelp returns keybindings to be shown in the mini help view. It's part
@@ -82,6 +90,10 @@ var keys = keyMap{
 		key.WithKeys("b"),
 		key.WithHelp("b", "browse all loaded CRL's from storage"),
 	),
+	InputPem: key.NewBinding(
+		key.WithKeys("p"),
+		key.WithHelp("p", "input a PEM certificate"),
+	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
@@ -93,19 +105,21 @@ var keys = keyMap{
 }
 
 type BaseModel struct {
-	title       string
-	state       sessionState
-	prevState   sessionState
-	keys        keyMap
-	help        help.Model
-	styles      *styles.Styles
-	input       InputModel
-	browse      *BrowseModel
-	list        ListModel
-	importModel ImportModel
-	err         error
-	width       int
-	height      int
+	title            string
+	state            sessionState
+	prevState        sessionState
+	keys             keyMap
+	help             help.Model
+	styles           *styles.Styles
+	input            InputModel
+	browse           *BrowseModel
+	list             ListModel // TODO rename all models so they end with *Model
+	importModel      ImportModel
+	inputPemModel    *InputPemModel
+	certificateModel *CertificateModel
+	err              error
+	width            int
+	height           int
 }
 
 func NewBaseModel() BaseModel {
@@ -133,11 +147,11 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.help.Width = msg.Width
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.keys.Quit) && m.state != inputView: // input view has it's own quit keybinding since we cannot use "q"
+		case key.Matches(msg, m.keys.Quit) && m.state != inputView && m.state != inputPemView: // input view has it's own quit keybinding since we cannot use "q"
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
-		case key.Matches(msg, m.keys.Home) && m.state != inputView:
+		case key.Matches(msg, m.keys.Home) && m.state != inputView && m.state != inputPemView:
 			m.prevState = m.state
 			m.state = baseView
 			m.title = titles[baseView]
@@ -153,6 +167,11 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = listView
 		m.title = titles[listView]
 		m.list = NewListModel(msg.RevocationList, msg.URL, m.width, m.height)
+	case messages.PemCertificateMsg:
+		m.prevState = m.state
+		m.state = certificateView
+		m.title = titles[certificateView]
+		m.certificateModel = NewCertificateModel(msg.Certificate)
 	}
 
 	return m.handleStates(msg)
@@ -164,11 +183,11 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.state {
 	case inputView:
 		inputModel, inputCmd := m.input.Update(msg)
-		m.input = inputModel.(InputModel)
+		m.input = inputModel.(InputModel) // TODO change to pointer
 		cmd = append(cmd, inputCmd)
 	case listView:
 		listModel, listCmd := m.list.Update(msg)
-		m.list = listModel.(ListModel)
+		m.list = listModel.(ListModel) // TODO change to pointer
 
 		if m.list.selectedItem != nil && m.list.itemSelected {
 			m.prevState = m.state
@@ -178,17 +197,25 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd = append(cmd, listCmd)
 	case revokedCertificateView:
 		revokedCertificateModel, revokedCertificateCmd := m.list.selectedItem.Update(msg)
-		rcm := revokedCertificateModel.(RevokedCertificateModel)
+		rcm := revokedCertificateModel.(RevokedCertificateModel) // TODO change to pointer
 		m.list.selectedItem = &rcm
 		cmd = append(cmd, revokedCertificateCmd)
 	case importView:
 		importModel, importCmd := m.importModel.Update(msg)
-		m.importModel = importModel.(ImportModel)
+		m.importModel = importModel.(ImportModel) // TODO change to pointer
 		cmd = append(cmd, importCmd)
 	case browseView:
 		browseModel, browseCmd := m.browse.Update(msg)
 		m.browse = browseModel.(*BrowseModel)
 		cmd = append(cmd, browseCmd)
+	case inputPemView:
+		inputPemModel, inputPemCmd := m.inputPemModel.Update(msg)
+		m.inputPemModel = inputPemModel.(*InputPemModel)
+		cmd = append(cmd, inputPemCmd)
+	case certificateView:
+		certificateModel, certificateCmd := m.certificateModel.Update(msg)
+		m.certificateModel = certificateModel.(*CertificateModel)
+		cmd = append(cmd, certificateCmd)
 	case baseView:
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
@@ -212,6 +239,13 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.title = titles[m.state]
 				m.browse = NewBrowseModel(m.height)
 				return m, m.browse.Init()
+			}
+			if key.Matches(msg, m.keys.InputPem) {
+				m.prevState = m.state
+				m.state = inputPemView
+				m.title = titles[m.state]
+				m.inputPemModel = NewInputPemModel(m.height, m.width)
+				return m, m.input.Init()
 			}
 		}
 	}
@@ -251,6 +285,18 @@ func (m BaseModel) View() string {
 		helpMenu := m.help.View(&browseKeys)
 		height := strings.Count(table, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, table) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
+	case inputPemView:
+		title := m.styles.Title.Render(m.title)
+		textArea := m.inputPemModel.View()
+		helpMenu := m.help.View(&inputPemKeys)
+		height := strings.Count(textArea, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, textArea) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
+	case certificateView:
+		title := m.styles.Title.Render(m.title)
+		certInfo := m.certificateModel.View()
+		helpMenu := m.help.View(&certificateKeys)
+		height := strings.Count(certInfo, "\n") + strings.Count(title, "\n")
+		return lipgloss.JoinVertical(lipgloss.Top, title, certInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	default:
 		title := m.styles.Title.Render(m.title)
 		if m.err != nil {
@@ -260,8 +306,14 @@ func (m BaseModel) View() string {
 		importHelp := m.styles.BaseText.Render("Import a CRL file from local import directory: ") + "i"
 		browseHelp := m.styles.BaseText.Render("Browse all loaded CRL's from storage") + "b"
 		mainMenu := fmt.Sprintf("%s\n%s\n%s", downloadHelp, importHelp, browseHelp)
+
+		inputPemHelp := m.styles.BaseText.Render("Input a Certificate in PEM format") + "p"
+		pemMenu := fmt.Sprintf("%s\n", inputPemHelp)
+
+		menu := fmt.Sprintf("%s\n\n%s", mainMenu, pemMenu)
+
 		helpMenu := m.help.View(&keys)
 		height := strings.Count(title, "\n")
-		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, mainMenu) + lipgloss.Place(m.width, m.height-height-5, lipgloss.Left, lipgloss.Bottom, helpMenu)
+		return lipgloss.JoinVertical(lipgloss.Top, title, errorMsg, menu) + lipgloss.Place(m.width, m.height-height-7, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	}
 }
