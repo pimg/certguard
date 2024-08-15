@@ -13,6 +13,7 @@ type Repository interface {
 	Delete(ctx context.Context, id int64) error
 	SaveRevokedCertificates(ctx context.Context, revocationListId int64, revokedCertificates []x509.RevocationListEntry) (int, error)
 	FindRevokedCertificates(ctx context.Context, revocationListId int64) ([]*RevokedCertificate, error)
+	FindRevokedCertificate(ctx context.Context, serialnumber string) (*RevokedCertificate, error)
 }
 
 type Storage struct {

@@ -8,6 +8,10 @@ import (
 // TODO create better mock repository that can be used for testing
 type MockRepository struct{}
 
+func (r *MockRepository) FindRevokedCertificate(_ context.Context, _ string) (*RevokedCertificate, error) {
+	return nil, nil
+}
+
 func (r *MockRepository) List(_ context.Context) ([]*CertificateRevocationList, error) {
 	return []*CertificateRevocationList{}, nil
 }
