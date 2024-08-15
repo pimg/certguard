@@ -31,3 +31,8 @@ type CRLDeleteConfirmationMsg struct {
 type PemCertificateMsg struct {
 	Certificate *x509.Certificate
 }
+
+type GetRevokedCertificateMsg struct {
+	RevokedCertificate *crl.RevokedCertificate
+	Found              bool
+}

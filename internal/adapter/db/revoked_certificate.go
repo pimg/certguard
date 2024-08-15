@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 	"time"
@@ -35,4 +36,34 @@ func (s *LibSqlStorage) FindRevokedCertificates(ctx context.Context, revocationL
 	}
 
 	return revokedCertificates, nil
+}
+
+func (s *LibSqlStorage) FindRevokedCertificate(ctx context.Context, serialnumber string) (*crl.RevokedCertificate, error) {
+	log.Printf("find revoked certificate by serial number: %s", serialnumber)
+	dbRevokedCertificate, err := s.Queries.GetRevokedCertificate(ctx, serialnumber)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if dbRevokedCertificate.Serialnumber != serialnumber {
+		return nil, errors.New("invalid serial number")
+	}
+
+	revocationDate, ok := dbRevokedCertificate.RevocationDate.(time.Time)
+	if !ok {
+		return nil, errors.New("invalid revocation date")
+	}
+
+	return &crl.RevokedCertificate{
+		SerialNumber:     dbRevokedCertificate.Serialnumber,
+		RevocationReason: crl.RevocationReason(dbRevokedCertificate.Reason),
+		RevocationDate:   revocationDate,
+		RevocationListID: dbRevokedCertificate.ID,
+		RevokedBy:        dbRevokedCertificate.RevokedBy,
+	}, nil
 }

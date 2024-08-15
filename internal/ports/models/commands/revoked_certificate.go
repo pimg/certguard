@@ -103,6 +103,32 @@ func (c *Commands) GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.
 	}
 }
 
+func (c *Commands) Search(serialnumber string) tea.Cmd {
+	log.Printf("search stored CRLs for serialnumber: %s", serialnumber)
+	ctx := context.Background()
+	return func() tea.Msg {
+		revokedCertificate, err := c.storage.Repository.FindRevokedCertificate(ctx, serialnumber)
+		if err != nil {
+			log.Printf("could not perform find action on serialnumber: %s", serialnumber)
+			return messages.ErrorMsg{
+				Err: errors.Join(errors.New("could not perform find action on serial number"), err),
+			}
+		}
+
+		if revokedCertificate == nil {
+			log.Printf("no revoked certificate for serialnumber: %s", serialnumber)
+			return messages.GetRevokedCertificateMsg{
+				Found: false,
+			}
+		}
+
+		return messages.GetRevokedCertificateMsg{
+			RevokedCertificate: revokedCertificate,
+			Found:              true,
+		}
+	}
+}
+
 func convertReasonCode(reason crl.RevocationReason) int {
 	switch reason {
 	case crl.RevocationReasonUnspecified:

@@ -59,7 +59,7 @@ type ImportModel struct {
 	commands     *commands.Commands
 }
 
-func NewImportModel(cmds *commands.Commands) *ImportModel {
+func NewImportModel(cmds *commands.Commands, height int) *ImportModel {
 	browseStyle := styles.DefaultStyles()
 	fp := filepicker.New()
 	fp.AllowedTypes = []string{".crl", ".pem", ".crt"}
@@ -67,6 +67,7 @@ func NewImportModel(cmds *commands.Commands) *ImportModel {
 	fp.Styles.File = browseStyle.FilePickerFile
 	fp.Styles.Selected = browseStyle.FilePickerCurrent
 	fp.Styles.Cursor = browseStyle.FilePickerFile
+	fp.Height = height - 10
 	fp.KeyMap.Back = key.NewBinding(key.WithKeys("h", "backspace", "left"), key.WithHelp("h", "back"))
 
 	fp.CurrentDirectory = cmds.ImportDir()

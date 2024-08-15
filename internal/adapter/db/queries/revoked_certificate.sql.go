@@ -40,13 +40,14 @@ func (q *Queries) CreateRevokedCertificates(ctx context.Context, arg CreateRevok
 }
 
 const getRevokedCertificate = `-- name: GetRevokedCertificate :one
-SELECT cert.serialnumber, cert.reason, DATETIME(cert.revocation_date) as revocation_date, crl.name AS revoked_by
+SELECT cert.id, cert.serialnumber, cert.reason, DATETIME(cert.revocation_date) as revocation_date, crl.name AS revoked_by
 FROM revoked_certificate as cert
 JOIN certificate_revocation_list AS crl ON crl.id = cert.revocation_list
 WHERE serialnumber = ?
 `
 
 type GetRevokedCertificateRow struct {
+	ID             int64
 	Serialnumber   string
 	Reason         string
 	RevocationDate interface{}
@@ -57,6 +58,7 @@ func (q *Queries) GetRevokedCertificate(ctx context.Context, serialnumber string
 	row := q.db.QueryRowContext(ctx, getRevokedCertificate, serialnumber)
 	var i GetRevokedCertificateRow
 	err := row.Scan(
+		&i.ID,
 		&i.Serialnumber,
 		&i.Reason,
 		&i.RevocationDate,

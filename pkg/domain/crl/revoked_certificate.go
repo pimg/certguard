@@ -7,6 +7,7 @@ type RevokedCertificate struct {
 	RevocationReason RevocationReason
 	RevocationDate   time.Time
 	RevocationListID int64
+	RevokedBy        string
 }
 
 type RevocationReason string

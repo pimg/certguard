@@ -174,7 +174,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prevState = m.state
 		m.state = certificateView
 		m.title = titles[certificateView]
-		m.certificateModel = NewCertificateModel(msg.Certificate)
+		m.certificateModel = NewCertificateModel(msg.Certificate, m.commands)
 	}
 
 	return m.handleStates(msg)
@@ -233,7 +233,7 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.prevState = m.state
 				m.state = importView
 				m.title = titles[m.state]
-				m.importModel = NewImportModel(m.commands)
+				m.importModel = NewImportModel(m.commands, m.height)
 				return m, m.importModel.Init()
 			}
 			if key.Matches(msg, m.keys.Browse) {
