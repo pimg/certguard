@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/url"
 	"time"
@@ -40,7 +39,7 @@ func (s *LibSqlStorage) Save(ctx context.Context, crl *crl.CertificateRevocation
 		return 0, err
 	}
 
-	fmt.Printf("crl with id: %d stored\n", id)
+	log.Printf("crl with id: %d stored\n", id)
 	return id, nil
 }
 

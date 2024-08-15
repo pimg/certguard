@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/pimg/certguard/pkg/domain/crl"
@@ -10,6 +11,7 @@ import (
 
 // Find all revoked certificates in CRL
 func (s *LibSqlStorage) FindRevokedCertificates(ctx context.Context, revocationListID int64) ([]*crl.RevokedCertificate, error) {
+	log.Printf("find revoked certificates in CRL: %d", revocationListID)
 	dbRevCerts, err := s.Queries.GetRevokedCertificatesByRevocationList(ctx, revocationListID)
 	if err != nil {
 		return nil, err
