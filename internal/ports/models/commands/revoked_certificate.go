@@ -5,8 +5,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"errors"
-	"fmt"
-	"log/slog"
+	"log"
 	"math/big"
 	"net/url"
 	"strconv"
@@ -26,12 +25,12 @@ type GetRevokedCertificatesArgs struct {
 }
 
 func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
-	slog.Debug(fmt.Sprintf("getting revoked certificate from storage with ID: %s", args.ID))
+	log.Printf("getting revoked certificate from storage with ID: %s", args.ID)
 	ctx := context.Background()
 	return func() tea.Msg {
 		ID, err := strconv.ParseInt(args.ID, 10, 64)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%s is not a valid ID, %v", args.ID, err))
+			log.Printf("%s is not a valid ID, %v", args.ID, err)
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse ID"), err),
 			}
@@ -39,7 +38,7 @@ func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
 
 		thisUpdate, err := time.Parse(time.DateOnly, args.ThisUpdate)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%s is not a valid time, %v", args.ThisUpdate, err))
+			log.Printf("%s is not a valid time, %v", args.ThisUpdate, err)
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse time of ThisUpdate"), err),
 			}
@@ -47,7 +46,7 @@ func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
 
 		nextUpdate, err := time.Parse(time.DateOnly, args.NextUpdate)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("%s is not a valid time, %v", args.NextUpdate, err))
+			log.Printf("%s is not a valid time, %v", args.NextUpdate, err)
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse time of NextUpdate"), err),
 			}
@@ -57,7 +56,7 @@ func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
 		if args.URL != "" {
 			URL, err = url.ParseRequestURI(args.URL)
 			if err != nil {
-				slog.Debug(fmt.Sprintf("%s is not a valid URL, %v", args.URL, err))
+				log.Printf("%s is not a valid URL, %v", args.URL, err)
 				return messages.ErrorMsg{
 					Err: errors.Join(errors.New("could not parse URL"), err),
 				}
@@ -66,7 +65,7 @@ func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
 
 		certificates, err := crl.GlobalStorage.Repository.FindRevokedCertificates(ctx, ID)
 		if err != nil {
-			slog.Debug(fmt.Sprintf("could not retrieve revoked certificates: %v", err))
+			log.Printf("could not retrieve revoked certificates: %v", err)
 			return messages.ErrorMsg{
 				Err: errors.Join(errors.New("could not parse CRL"), err),
 			}
@@ -77,7 +76,7 @@ func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
 			serialNumber := new(big.Int)
 			serialNumber, ok := serialNumber.SetString(cert.SerialNumber, 10)
 			if !ok {
-				slog.Debug(fmt.Sprintf("could not parse serialNumber: %v", cert))
+				log.Printf("could not parse serialNumber: %v", cert)
 				return messages.ErrorMsg{
 					Err: errors.Join(errors.New("could not parse serialNumber"), err),
 				}

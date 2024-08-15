@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/url"
 	"os"
 	"strconv"
@@ -18,7 +17,7 @@ import (
 )
 
 func GetCRL(url *url.URL) tea.Cmd {
-	slog.Debug("requesting CRL from: " + url.String())
+	log.Printf("requesting CRL from: %s", url.String())
 	ctx := context.Background()
 	return func() tea.Msg {
 		revocationListURL := strings.TrimSpace(url.String())
@@ -44,6 +43,7 @@ func GetCRL(url *url.URL) tea.Cmd {
 }
 
 func LoadCRL(path string) tea.Cmd {
+	log.Printf("loading CRL from path: %s", path)
 	ctx := context.Background()
 	return func() tea.Msg {
 		rawCRL, err := os.ReadFile(path)
@@ -75,6 +75,7 @@ func LoadCRL(path string) tea.Cmd {
 }
 
 func GetCRLsFromStore() tea.Msg {
+	log.Println("requesting CRLs from store")
 	ctx := context.Background()
 	cRLs, err := domain_crl.GlobalStorage.Repository.List(ctx)
 	if err != nil {
@@ -87,6 +88,7 @@ func GetCRLsFromStore() tea.Msg {
 }
 
 func DeleteCRLFromStore(id string) tea.Cmd {
+	log.Printf("deleting CRL from store: %s", id)
 	ctx := context.Background()
 	return func() tea.Msg {
 		dbID, err := strconv.ParseInt(id, 10, 64)
@@ -104,6 +106,7 @@ func DeleteCRLFromStore(id string) tea.Cmd {
 			}
 		}
 
+		log.Printf("deleted CRL from store: %s", id)
 		return messages.CRLDeleteConfirmationMsg{
 			DeletionSuccessful: true,
 		}
