@@ -10,7 +10,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/internal/ports/models/styles"
-	"github.com/pimg/certguard/pkg/domain/crl"
 )
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
@@ -70,7 +69,7 @@ func NewImportModel(cmds *commands.Commands) *ImportModel {
 	fp.Styles.Cursor = browseStyle.FilePickerFile
 	fp.KeyMap.Back = key.NewBinding(key.WithKeys("h", "backspace", "left"), key.WithHelp("h", "back"))
 
-	fp.CurrentDirectory = crl.GlobalStorage.ImportDir()
+	fp.CurrentDirectory = cmds.ImportDir()
 
 	return &ImportModel{
 		keys:       importKeys,

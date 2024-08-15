@@ -63,7 +63,7 @@ func (c *Commands) GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.
 			}
 		}
 
-		certificates, err := crl.GlobalStorage.Repository.FindRevokedCertificates(ctx, ID)
+		certificates, err := c.storage.Repository.FindRevokedCertificates(ctx, ID)
 		if err != nil {
 			log.Printf("could not retrieve revoked certificates: %v", err)
 			return messages.ErrorMsg{

@@ -5,11 +5,19 @@ import (
 )
 
 type Commands struct {
-	Storage *domain_crl.Storage
+	storage *domain_crl.Storage
 }
 
 func NewCommands(storage *domain_crl.Storage) *Commands {
 	return &Commands{
-		Storage: storage,
+		storage: storage,
 	}
+}
+
+func (c *Commands) CacheDir() string {
+	return c.storage.CacheDir()
+}
+
+func (c *Commands) ImportDir() string {
+	return c.storage.ImportDir()
 }
