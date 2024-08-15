@@ -88,11 +88,11 @@ var keys = keyMap{
 	),
 	Browse: key.NewBinding(
 		key.WithKeys("b"),
-		key.WithHelp("b", "browse all loaded CRL's from storage"),
+		key.WithHelp("b", "browseModel all loaded CRL's from storage"),
 	),
 	InputPem: key.NewBinding(
 		key.WithKeys("p"),
-		key.WithHelp("p", "input a PEM certificate"),
+		key.WithHelp("p", "inputModel a PEM certificate"),
 	),
 	Help: key.NewBinding(
 		key.WithKeys("?"),
@@ -111,10 +111,10 @@ type BaseModel struct {
 	keys             keyMap
 	help             help.Model
 	styles           *styles.Styles
-	input            InputModel
-	browse           *BrowseModel
-	list             ListModel // TODO rename all models so they end with *Model
-	importModel      ImportModel
+	inputModel       *InputModel
+	browseModel      *BrowseModel
+	listModel        *ListModel
+	importModel      *ImportModel
 	inputPemModel    *InputPemModel
 	certificateModel *CertificateModel
 	err              error
@@ -147,7 +147,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.help.Width = msg.Width
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.keys.Quit) && m.state != inputView && m.state != inputPemView: // input view has it's own quit keybinding since we cannot use "q"
+		case key.Matches(msg, m.keys.Quit) && m.state != inputView && m.state != inputPemView: // inputModel view has it's own quit keybinding since we cannot use "q"
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
@@ -166,7 +166,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prevState = m.state
 		m.state = listView
 		m.title = titles[listView]
-		m.list = NewListModel(msg.RevocationList, msg.URL, m.width, m.height)
+		m.listModel = NewListModel(msg.RevocationList, msg.URL, m.width, m.height)
 	case messages.PemCertificateMsg:
 		m.prevState = m.state
 		m.state = certificateView
@@ -182,31 +182,31 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd []tea.Cmd
 	switch m.state {
 	case inputView:
-		inputModel, inputCmd := m.input.Update(msg)
-		m.input = inputModel.(InputModel) // TODO change to pointer
+		inputModel, inputCmd := m.inputModel.Update(msg)
+		m.inputModel = inputModel.(*InputModel)
 		cmd = append(cmd, inputCmd)
 	case listView:
-		listModel, listCmd := m.list.Update(msg)
-		m.list = listModel.(ListModel) // TODO change to pointer
+		listModel, listCmd := m.listModel.Update(msg)
+		m.listModel = listModel.(*ListModel)
 
-		if m.list.selectedItem != nil && m.list.itemSelected {
+		if m.listModel.selectedItem != nil && m.listModel.itemSelected {
 			m.prevState = m.state
 			m.state = revokedCertificateView
 			m.title = titles[revokedCertificateView]
 		}
 		cmd = append(cmd, listCmd)
 	case revokedCertificateView:
-		revokedCertificateModel, revokedCertificateCmd := m.list.selectedItem.Update(msg)
-		rcm := revokedCertificateModel.(RevokedCertificateModel) // TODO change to pointer
-		m.list.selectedItem = &rcm
+		revokedCertificateModel, revokedCertificateCmd := m.listModel.selectedItem.Update(msg)
+		rcm := revokedCertificateModel.(*RevokedCertificateModel)
+		m.listModel.selectedItem = rcm
 		cmd = append(cmd, revokedCertificateCmd)
 	case importView:
 		importModel, importCmd := m.importModel.Update(msg)
-		m.importModel = importModel.(ImportModel) // TODO change to pointer
+		m.importModel = importModel.(*ImportModel)
 		cmd = append(cmd, importCmd)
 	case browseView:
-		browseModel, browseCmd := m.browse.Update(msg)
-		m.browse = browseModel.(*BrowseModel)
+		browseModel, browseCmd := m.browseModel.Update(msg)
+		m.browseModel = browseModel.(*BrowseModel)
 		cmd = append(cmd, browseCmd)
 	case inputPemView:
 		inputPemModel, inputPemCmd := m.inputPemModel.Update(msg)
@@ -223,8 +223,8 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.prevState = m.state
 				m.state = inputView
 				m.title = titles[m.state]
-				m.input = NewInputModel()
-				return m, m.input.Init()
+				m.inputModel = NewInputModel()
+				return m, m.inputModel.Init()
 			}
 			if key.Matches(msg, m.keys.Import) {
 				m.prevState = m.state
@@ -237,15 +237,15 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.prevState = m.state
 				m.state = browseView
 				m.title = titles[m.state]
-				m.browse = NewBrowseModel(m.height)
-				return m, m.browse.Init()
+				m.browseModel = NewBrowseModel(m.height)
+				return m, m.browseModel.Init()
 			}
 			if key.Matches(msg, m.keys.InputPem) {
 				m.prevState = m.state
 				m.state = inputPemView
 				m.title = titles[m.state]
 				m.inputPemModel = NewInputPemModel(m.height, m.width)
-				return m, m.input.Init()
+				return m, m.inputModel.Init()
 			}
 		}
 	}
@@ -259,18 +259,18 @@ func (m BaseModel) View() string {
 	switch m.state {
 	case inputView:
 		title := m.styles.Title.Render(m.title)
-		inputBox := m.input.View()
+		inputBox := m.inputModel.View()
 		helpMenu := m.help.View(&inputKeys)
 		height := strings.Count(inputBox, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, inputBox) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case listView:
 		title := m.styles.Title.Render(m.title)
-		listInfo := m.list.View()
+		listInfo := m.listModel.View()
 		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo)
 	case revokedCertificateView:
 		title := m.styles.Title.Render(m.title)
 		helpMenu := m.help.View(&revokedCertificateKeys)
-		revokedCertificateDetails := m.list.selectedItem.View()
+		revokedCertificateDetails := m.listModel.selectedItem.View()
 		height := strings.Count(revokedCertificateDetails, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, revokedCertificateDetails) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case importView:
@@ -281,7 +281,7 @@ func (m BaseModel) View() string {
 		return lipgloss.JoinVertical(lipgloss.Top, title, listInfo) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)
 	case browseView:
 		title := m.styles.Title.Render(m.title)
-		table := m.browse.View()
+		table := m.browseModel.View()
 		helpMenu := m.help.View(&browseKeys)
 		height := strings.Count(table, "\n") + strings.Count(title, "\n")
 		return lipgloss.JoinVertical(lipgloss.Top, title, table) + lipgloss.Place(m.width, m.height-height-1, lipgloss.Left, lipgloss.Bottom, helpMenu)

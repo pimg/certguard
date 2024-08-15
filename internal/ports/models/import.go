@@ -59,7 +59,7 @@ type ImportModel struct {
 	err          error
 }
 
-func NewImportModel() ImportModel {
+func NewImportModel() *ImportModel {
 	browseStyle := styles.DefaultStyles()
 	fp := filepicker.New()
 	fp.AllowedTypes = []string{".crl", ".pem", ".crt"}
@@ -71,18 +71,18 @@ func NewImportModel() ImportModel {
 
 	fp.CurrentDirectory = crl.GlobalStorage.ImportDir()
 
-	return ImportModel{
+	return &ImportModel{
 		keys:       importKeys,
 		styles:     styles.DefaultStyles(),
 		filepicker: fp,
 	}
 }
 
-func (m ImportModel) Init() tea.Cmd {
+func (m *ImportModel) Init() tea.Cmd {
 	return m.filepicker.Init()
 }
 
-func (m ImportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *ImportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
 	case clearErrorMsg:
 		m.err = nil
@@ -114,7 +114,7 @@ func (m ImportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m ImportModel) View() string {
+func (m *ImportModel) View() string {
 	var s strings.Builder
 	s.WriteString("\n  ")
 	if m.err != nil {

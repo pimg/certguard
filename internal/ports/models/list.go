@@ -78,7 +78,7 @@ type ListModel struct {
 	itemSelected bool
 }
 
-func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int) ListModel {
+func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int) *ListModel {
 	items := revokedCertificatesToItems(crl.RevokedCertificateEntries)
 
 	defaultDelegate := list.NewDefaultDelegate()
@@ -94,7 +94,7 @@ func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int) Lis
 	revokedList.AdditionalShortHelpKeys = listKeys.ShortHelp
 
 	revokedList.Styles.Title = revokedList.Styles.Title.Background(c)
-	return ListModel{
+	return &ListModel{
 		keys:   listKeys,
 		styles: styles.DefaultStyles(),
 		list:   revokedList,
@@ -116,11 +116,11 @@ func revokedCertificatesToItems(entries []x509.RevocationListEntry) []list.Item 
 	return items
 }
 
-func (l ListModel) Init() tea.Cmd {
+func (l *ListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (l *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -129,7 +129,7 @@ func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(l.list.VisibleItems()) != 0 {
 				selectedItem := l.list.SelectedItem().(item)
 				revokedCertificateModel := NewRevokedCertificateModel(selectedItem.serialnumber, selectedItem.revocationReason, selectedItem.revocationDate)
-				l.selectedItem = &revokedCertificateModel
+				l.selectedItem = revokedCertificateModel
 				l.itemSelected = true
 			}
 		case key.Matches(msg, listKeys.Refresh):
@@ -148,7 +148,7 @@ func (l ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return l, cmd
 }
 
-func (l ListModel) View() string {
+func (l *ListModel) View() string {
 	var s strings.Builder
 
 	renderedCN := l.crl.Issuer.CommonName

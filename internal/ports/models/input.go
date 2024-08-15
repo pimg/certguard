@@ -53,7 +53,7 @@ type InputModel struct {
 	styles    *styles.Styles
 }
 
-func NewInputModel() InputModel {
+func NewInputModel() *InputModel {
 	i := InputModel{}
 
 	input := textinput.New()
@@ -63,14 +63,14 @@ func NewInputModel() InputModel {
 	i.keys = inputKeys
 	i.styles = styles.DefaultStyles()
 
-	return i
+	return &i
 }
 
-func (i InputModel) Init() tea.Cmd {
+func (i *InputModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (i *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -100,7 +100,7 @@ func (i InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return i, cmd
 }
 
-func (i InputModel) View() string {
+func (i *InputModel) View() string {
 	errorMsg := ""
 	// TODO introduce spinner since download time can be long toggleling spinners seems to  be done by creating  a new one: https://github.com/charmbracelet/bubbletea/blob/master/examples/spinners/main.go
 	if i.textinput.Err != nil {
