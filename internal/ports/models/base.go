@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/internal/ports/models/messages"
 	"github.com/pimg/certguard/internal/ports/models/styles"
 )
@@ -111,6 +112,7 @@ type BaseModel struct {
 	keys             keyMap
 	help             help.Model
 	styles           *styles.Styles
+	commands         *commands.Commands
 	inputModel       *InputModel
 	browseModel      *BrowseModel
 	listModel        *ListModel
@@ -122,7 +124,7 @@ type BaseModel struct {
 	height           int
 }
 
-func NewBaseModel() BaseModel {
+func NewBaseModel(cmds *commands.Commands) BaseModel {
 	return BaseModel{
 		title:     titles[baseView],
 		state:     baseView,
@@ -130,6 +132,7 @@ func NewBaseModel() BaseModel {
 		keys:      keys,
 		help:      help.New(),
 		styles:    styles.DefaultStyles(),
+		commands:  cmds,
 	}
 }
 
@@ -166,7 +169,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prevState = m.state
 		m.state = listView
 		m.title = titles[listView]
-		m.listModel = NewListModel(msg.RevocationList, msg.URL, m.width, m.height)
+		m.listModel = NewListModel(msg.RevocationList, msg.URL, m.width, m.height, m.commands)
 	case messages.PemCertificateMsg:
 		m.prevState = m.state
 		m.state = certificateView
@@ -223,28 +226,28 @@ func (m BaseModel) handleStates(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.prevState = m.state
 				m.state = inputView
 				m.title = titles[m.state]
-				m.inputModel = NewInputModel()
+				m.inputModel = NewInputModel(m.commands)
 				return m, m.inputModel.Init()
 			}
 			if key.Matches(msg, m.keys.Import) {
 				m.prevState = m.state
 				m.state = importView
 				m.title = titles[m.state]
-				m.importModel = NewImportModel()
+				m.importModel = NewImportModel(m.commands)
 				return m, m.importModel.Init()
 			}
 			if key.Matches(msg, m.keys.Browse) {
 				m.prevState = m.state
 				m.state = browseView
 				m.title = titles[m.state]
-				m.browseModel = NewBrowseModel(m.height)
+				m.browseModel = NewBrowseModel(m.height, m.commands)
 				return m, m.browseModel.Init()
 			}
 			if key.Matches(msg, m.keys.InputPem) {
 				m.prevState = m.state
 				m.state = inputPemView
 				m.title = titles[m.state]
-				m.inputPemModel = NewInputPemModel(m.height, m.width)
+				m.inputPemModel = NewInputPemModel(m.height, m.width, m.commands)
 				return m, m.inputModel.Init()
 			}
 		}

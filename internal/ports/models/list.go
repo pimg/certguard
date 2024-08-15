@@ -76,9 +76,10 @@ type ListModel struct {
 	crlUrl       *url.URL
 	selectedItem *RevokedCertificateModel
 	itemSelected bool
+	commands     *commands.Commands
 }
 
-func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int) *ListModel {
+func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int, cmds *commands.Commands) *ListModel {
 	items := revokedCertificatesToItems(crl.RevokedCertificateEntries)
 
 	defaultDelegate := list.NewDefaultDelegate()
@@ -95,11 +96,12 @@ func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int) *Li
 
 	revokedList.Styles.Title = revokedList.Styles.Title.Background(c)
 	return &ListModel{
-		keys:   listKeys,
-		styles: styles.DefaultStyles(),
-		list:   revokedList,
-		crl:    crl,
-		crlUrl: URL,
+		keys:     listKeys,
+		styles:   styles.DefaultStyles(),
+		list:     revokedList,
+		crl:      crl,
+		crlUrl:   URL,
+		commands: cmds,
 	}
 }
 
@@ -134,7 +136,7 @@ func (l *ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, listKeys.Refresh):
 			if l.crl.NextUpdate.Before(time.Now()) {
-				cmd = commands.GetCRL(l.crlUrl)
+				cmd = l.commands.GetCRL(l.crlUrl)
 				return l, cmd
 			}
 		default:

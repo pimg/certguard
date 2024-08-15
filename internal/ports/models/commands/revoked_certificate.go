@@ -24,7 +24,7 @@ type GetRevokedCertificatesArgs struct {
 	URL        string
 }
 
-func GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
+func (c *Commands) GetRevokedCertificates(args *GetRevokedCertificatesArgs) tea.Cmd {
 	log.Printf("getting revoked certificate from storage with ID: %s", args.ID)
 	ctx := context.Background()
 	return func() tea.Msg {

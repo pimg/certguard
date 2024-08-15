@@ -16,7 +16,7 @@ import (
 	domain_crl "github.com/pimg/certguard/pkg/domain/crl"
 )
 
-func GetCRL(url *url.URL) tea.Cmd {
+func (c *Commands) GetCRL(url *url.URL) tea.Cmd {
 	log.Printf("requesting CRL from: %s", url.String())
 	ctx := context.Background()
 	return func() tea.Msg {
@@ -42,7 +42,7 @@ func GetCRL(url *url.URL) tea.Cmd {
 	}
 }
 
-func LoadCRL(path string) tea.Cmd {
+func (c *Commands) LoadCRL(path string) tea.Cmd {
 	log.Printf("loading CRL from path: %s", path)
 	ctx := context.Background()
 	return func() tea.Msg {
@@ -74,7 +74,7 @@ func LoadCRL(path string) tea.Cmd {
 	}
 }
 
-func GetCRLsFromStore() tea.Msg {
+func (c *Commands) GetCRLsFromStore() tea.Msg {
 	log.Println("requesting CRLs from store")
 	ctx := context.Background()
 	cRLs, err := domain_crl.GlobalStorage.Repository.List(ctx)
@@ -87,7 +87,7 @@ func GetCRLsFromStore() tea.Msg {
 	}
 }
 
-func DeleteCRLFromStore(id string) tea.Cmd {
+func (c *Commands) DeleteCRLFromStore(id string) tea.Cmd {
 	log.Printf("deleting CRL from store: %s", id)
 	ctx := context.Background()
 	return func() tea.Msg {

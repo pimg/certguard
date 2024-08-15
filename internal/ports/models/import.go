@@ -57,9 +57,10 @@ type ImportModel struct {
 	filepicker   filepicker.Model
 	selectedFile string
 	err          error
+	commands     *commands.Commands
 }
 
-func NewImportModel() *ImportModel {
+func NewImportModel(cmds *commands.Commands) *ImportModel {
 	browseStyle := styles.DefaultStyles()
 	fp := filepicker.New()
 	fp.AllowedTypes = []string{".crl", ".pem", ".crt"}
@@ -75,6 +76,7 @@ func NewImportModel() *ImportModel {
 		keys:       importKeys,
 		styles:     styles.DefaultStyles(),
 		filepicker: fp,
+		commands:   cmds,
 	}
 }
 
@@ -96,7 +98,7 @@ func (m *ImportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Get the path of the selected file.
 		m.selectedFile = path
 
-		cmd := commands.LoadCRL(m.selectedFile)
+		cmd := m.commands.LoadCRL(m.selectedFile)
 		m.selectedFile = ""
 		m.filepicker.Path = ""
 		return m, cmd

@@ -76,9 +76,10 @@ type BrowseModel struct {
 	markedForDeletion string
 	errorMsg          string
 	styles            *styles.Styles
+	commands          *commands.Commands
 }
 
-func NewBrowseModel(height int) *BrowseModel {
+func NewBrowseModel(height int, cmds *commands.Commands) *BrowseModel {
 	columns := []table.Column{
 		{Title: "ID", Width: 2},
 		{Title: "Name", Width: 30},
@@ -101,13 +102,14 @@ func NewBrowseModel(height int) *BrowseModel {
 	tbl.SetStyles(s)
 
 	return &BrowseModel{
-		table:  tbl,
-		styles: styles.DefaultStyles(),
+		table:    tbl,
+		styles:   styles.DefaultStyles(),
+		commands: cmds,
 	}
 }
 
 func (m *BrowseModel) Init() tea.Cmd {
-	return commands.GetCRLsFromStore
+	return m.commands.GetCRLsFromStore
 }
 
 func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -135,7 +137,7 @@ func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
-			cmd := commands.GetRevokedCertificates(&commands.GetRevokedCertificatesArgs{
+			cmd := m.commands.GetRevokedCertificates(&commands.GetRevokedCertificatesArgs{
 				ID:         m.table.SelectedRow()[0],
 				CN:         m.table.SelectedRow()[1],
 				ThisUpdate: m.table.SelectedRow()[2],
@@ -149,7 +151,7 @@ func (m *BrowseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.markedForDeletion = ""
 		case "y":
 			if m.markedForDeletion != "" {
-				cmd := commands.DeleteCRLFromStore(m.markedForDeletion)
+				cmd := m.commands.DeleteCRLFromStore(m.markedForDeletion)
 				return m, cmd
 			}
 		}

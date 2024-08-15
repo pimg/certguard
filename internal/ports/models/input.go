@@ -51,9 +51,10 @@ type InputModel struct {
 	keys      inputKeyMap
 	textinput textinput.Model
 	styles    *styles.Styles
+	commands  *commands.Commands
 }
 
-func NewInputModel() *InputModel {
+func NewInputModel(cmds *commands.Commands) *InputModel {
 	i := InputModel{}
 
 	input := textinput.New()
@@ -62,6 +63,8 @@ func NewInputModel() *InputModel {
 	i.textinput = input
 	i.keys = inputKeys
 	i.styles = styles.DefaultStyles()
+
+	i.commands = cmds
 
 	return &i
 }
@@ -87,7 +90,7 @@ func (i *InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				i.textinput.Err = err
 				return i, nil
 			}
-			cmd = commands.GetCRL(url)
+			cmd = i.commands.GetCRL(url)
 			return i, cmd
 		}
 
