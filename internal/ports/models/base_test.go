@@ -6,13 +6,14 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	cmds "github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/internal/ports/models/messages"
 	"github.com/pimg/certguard/pkg/domain/crl"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInitialState(t *testing.T) {
-	baseModel := NewBaseModel()
+	baseModel := NewBaseModel(nil)
 
 	assert.Equal(t, baseView, baseModel.state)
 	assert.Equal(t, titles[baseView], baseModel.title)
@@ -20,7 +21,7 @@ func TestInitialState(t *testing.T) {
 }
 
 func TestSwitchToInputModel(t *testing.T) {
-	baseModel := NewBaseModel()
+	baseModel := NewBaseModel(nil)
 
 	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Download))
 
@@ -29,7 +30,7 @@ func TestSwitchToInputModel(t *testing.T) {
 }
 
 func TestSwitchBackToBaseModel(t *testing.T) {
-	baseModel := NewBaseModel()
+	baseModel := NewBaseModel(nil)
 
 	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Download))
 
@@ -43,9 +44,11 @@ func TestSwitchBackToBaseModel(t *testing.T) {
 }
 
 func TestSwitchToBrowseModel(t *testing.T) {
-	_, err := crl.NewMockStorage()
+	storage, err := crl.NewMockStorage()
 	assert.NoError(t, err)
-	baseModel := NewBaseModel()
+
+	commands := cmds.NewCommands(storage)
+	baseModel := NewBaseModel(commands)
 
 	updatedModel, _ := baseModel.Update(keyBindingToKeyMsg(keys.Import))
 
@@ -54,7 +57,7 @@ func TestSwitchToBrowseModel(t *testing.T) {
 }
 
 func TestSwitchToListModel(t *testing.T) {
-	baseModel := NewBaseModel()
+	baseModel := NewBaseModel(nil)
 
 	updatedModel, _ := baseModel.Update(messages.CRLResponseMsg{RevocationList: &x509.RevocationList{}})
 	assert.Equal(t, listView, updatedModel.(BaseModel).state)
@@ -62,7 +65,7 @@ func TestSwitchToListModel(t *testing.T) {
 }
 
 func TestSwitchToHome(t *testing.T) {
-	baseModel := NewBaseModel()
+	baseModel := NewBaseModel(nil)
 
 	updatedModel, _ := baseModel.Update(messages.CRLResponseMsg{RevocationList: &x509.RevocationList{}})
 	assert.Equal(t, listView, updatedModel.(BaseModel).state)

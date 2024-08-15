@@ -53,9 +53,10 @@ type InputPemModel struct {
 	styles   *styles.Styles
 	textArea textarea.Model
 	msg      string // Tmp placeholder before we implement the view model
+	commands *commands.Commands
 }
 
-func NewInputPemModel(height, width int) *InputPemModel {
+func NewInputPemModel(height, width int, cmds *commands.Commands) *InputPemModel {
 	i := &InputPemModel{
 		keys:   inputPemKeys,
 		styles: styles.DefaultStyles(),
@@ -76,6 +77,8 @@ func NewInputPemModel(height, width int) *InputPemModel {
 
 	i.textArea = ta
 
+	i.commands = cmds
+
 	return i
 }
 
@@ -93,7 +96,7 @@ func (i *InputPemModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, i.keys.Quit):
 			return i, tea.Quit
 		case key.Matches(msg, i.keys.Enter):
-			cmd = commands.ParsePemCertficate(i.textArea.Value())
+			cmd = i.commands.ParsePemCertficate(i.textArea.Value())
 			i.textArea.Reset()
 			return i, cmd
 		default:

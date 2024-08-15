@@ -9,7 +9,7 @@ import (
 	"github.com/pimg/certguard/pkg/domain/certificate"
 )
 
-func ParsePemCertficate(pem string) tea.Cmd {
+func (c *Commands) ParsePemCertficate(pem string) tea.Cmd {
 	return func() tea.Msg {
 		cert, err := certificate.ParsePEMCertificate([]byte(pem))
 		if err != nil {

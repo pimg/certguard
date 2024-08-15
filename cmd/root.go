@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pimg/certguard/internal/adapter/db"
 	"github.com/pimg/certguard/internal/ports/models"
+	cmds "github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/pkg/domain/crl"
 	"github.com/spf13/cobra"
 )
@@ -74,14 +75,16 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = crl.NewStorage(libsqlStorage, cacheDir)
+	storage, err := crl.NewStorage(libsqlStorage, cacheDir)
 	if err != nil {
 		return err
 	}
 
 	log.Printf("cache initialized at: %s", cacheDir)
 
-	if _, err := tea.NewProgram(models.NewBaseModel(), tea.WithAltScreen()).Run(); err != nil {
+	commands := cmds.NewCommands(storage)
+
+	if _, err := tea.NewProgram(models.NewBaseModel(commands), tea.WithAltScreen()).Run(); err != nil {
 		return err
 	}
 	return nil
