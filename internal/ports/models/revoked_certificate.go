@@ -42,8 +42,8 @@ type RevokedCertificateModel struct {
 	keys                                           revokedCertKeyMap
 }
 
-func NewRevokedCertificateModel(serialnumber, revocationReason, revocationDate string) RevokedCertificateModel {
-	return RevokedCertificateModel{
+func NewRevokedCertificateModel(serialnumber, revocationReason, revocationDate string) *RevokedCertificateModel {
+	return &RevokedCertificateModel{
 		serialnumber:     serialnumber,
 		revocationReason: revocationReason,
 		revocationDate:   revocationDate,
@@ -52,15 +52,15 @@ func NewRevokedCertificateModel(serialnumber, revocationReason, revocationDate s
 	}
 }
 
-func (r RevokedCertificateModel) Init() tea.Cmd {
+func (r *RevokedCertificateModel) Init() tea.Cmd {
 	return nil
 }
 
-func (r RevokedCertificateModel) Update(_ tea.Msg) (tea.Model, tea.Cmd) {
+func (r *RevokedCertificateModel) Update(_ tea.Msg) (tea.Model, tea.Cmd) {
 	return r, nil
 }
 
-func (r RevokedCertificateModel) View() string {
+func (r *RevokedCertificateModel) View() string {
 	serialnumber := r.styles.RevokedCertificateText.Render("Serialnumber: ") + r.serialnumber
 	revocationDate := r.styles.RevokedCertificateText.Render("Revocation date: ") + r.revocationDate
 
