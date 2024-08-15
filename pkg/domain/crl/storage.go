@@ -25,11 +25,8 @@ func NewStorage(repository Repository, baseDir string) (*Storage, error) {
 		Repository: repository,
 		baseDir:    baseDir,
 	}
-	GlobalStorage = storage
 	return storage, nil
 }
-
-var GlobalStorage *Storage
 
 func (s *Storage) CacheDir() string {
 	return s.baseDir

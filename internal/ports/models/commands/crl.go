@@ -30,7 +30,7 @@ func (c *Commands) GetCRL(url *url.URL) tea.Cmd {
 			}
 		}
 
-		err = domain_crl.Process(ctx, url, revocationList, domain_crl.GlobalStorage)
+		err = domain_crl.Process(ctx, url, revocationList, c.storage)
 		if err != nil {
 			return nil
 		}
@@ -63,7 +63,7 @@ func (c *Commands) LoadCRL(path string) tea.Cmd {
 			}
 		}
 
-		err = domain_crl.Process(ctx, nil, revocationList, domain_crl.GlobalStorage)
+		err = domain_crl.Process(ctx, nil, revocationList, c.storage)
 		if err != nil {
 			return nil
 		}
@@ -77,7 +77,7 @@ func (c *Commands) LoadCRL(path string) tea.Cmd {
 func (c *Commands) GetCRLsFromStore() tea.Msg {
 	log.Println("requesting CRLs from store")
 	ctx := context.Background()
-	cRLs, err := domain_crl.GlobalStorage.Repository.List(ctx)
+	cRLs, err := c.storage.Repository.List(ctx)
 	if err != nil {
 		return nil
 	}
@@ -98,7 +98,7 @@ func (c *Commands) DeleteCRLFromStore(id string) tea.Cmd {
 				Err: errors.Join(errors.New("could not parse CRL ID, to be used for deletion"), err),
 			}
 		}
-		err = domain_crl.GlobalStorage.Repository.Delete(ctx, dbID)
+		err = c.storage.Repository.Delete(ctx, dbID)
 		if err != nil {
 			log.Println("could not delete CRL")
 			return messages.ErrorMsg{
