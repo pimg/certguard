@@ -1,6 +1,6 @@
 @PHONY:run
 run:
-	go run main.go crl --debug
+	go run main.go --debug
 
 @PHONY:test
 test:

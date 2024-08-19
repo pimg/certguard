@@ -18,4 +18,5 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
       - uses: wagoid/commitlint-github-action@v6
+        if: ${{ github.actor != 'dependabot[bot]' }}
         name: commit linter
