@@ -305,12 +305,12 @@ func (m BaseModel) View() string {
 		if m.err != nil {
 			errorMsg = m.err.Error()
 		}
-		downloadHelp := m.styles.BaseText.Render("Download a CRL file: ") + "d"
-		importHelp := m.styles.BaseText.Render("Import a CRL file from local import directory: ") + "i"
-		browseHelp := m.styles.BaseText.Render("Browse all loaded CRL's from storage") + "b"
+		downloadHelp := m.styles.BaseMenuText.Render("Download a CRL file: ") + "d"
+		importHelp := m.styles.BaseMenuText.Render("Import a CRL, or PEM Cert from import directory: ") + "i"
+		browseHelp := m.styles.BaseMenuText.Render("Browse all loaded CRL's from storage") + "b"
 		mainMenu := fmt.Sprintf("%s\n%s\n%s", downloadHelp, importHelp, browseHelp)
 
-		inputPemHelp := m.styles.BaseText.Render("Input a Certificate in PEM format") + "p"
+		inputPemHelp := m.styles.BaseMenuText.Render("Input a Certificate in PEM format") + "p"
 		pemMenu := fmt.Sprintf("%s\n", inputPemHelp)
 
 		menu := fmt.Sprintf("%s\n\n%s", mainMenu, pemMenu)

@@ -98,7 +98,7 @@ func (m *ImportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Get the path of the selected file.
 		m.selectedFile = path
 
-		cmd := m.commands.LoadCRL(m.selectedFile)
+		cmd := m.commands.ImportFile(m.selectedFile)
 		m.selectedFile = ""
 		m.filepicker.Path = ""
 		return m, cmd
