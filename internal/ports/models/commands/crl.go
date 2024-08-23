@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 
@@ -38,38 +37,6 @@ func (c *Commands) GetCRL(url *url.URL) tea.Cmd {
 		return messages.CRLResponseMsg{
 			RevocationList: revocationList,
 			URL:            url,
-		}
-	}
-}
-
-func (c *Commands) LoadCRL(path string) tea.Cmd {
-	log.Printf("loading CRL from path: %s", path)
-	ctx := context.Background()
-	return func() tea.Msg {
-		rawCRL, err := os.ReadFile(path)
-		if err != nil {
-			errorMsg := fmt.Errorf("could not load CRL from import location: %s", path)
-			log.Println(errorMsg.Error())
-			return messages.ErrorMsg{
-				Err: errors.Join(errorMsg, err),
-			}
-		}
-
-		revocationList, err := crl.ParseRevocationList(rawCRL)
-		if err != nil {
-			log.Println("could not parse CRL")
-			return messages.ErrorMsg{
-				Err: errors.Join(errors.New("could not parse CRL"), err),
-			}
-		}
-
-		err = domain_crl.Process(ctx, nil, revocationList, c.storage)
-		if err != nil {
-			return nil
-		}
-
-		return messages.CRLResponseMsg{
-			RevocationList: revocationList,
 		}
 	}
 }
