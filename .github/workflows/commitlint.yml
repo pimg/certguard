@@ -1,0 +1,19 @@
+name: commit-linter
+on:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  commitlint:
+    name: commit-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: wagoid/commitlint-github-action@v6
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        name: commit linter
