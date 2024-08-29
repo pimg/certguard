@@ -96,6 +96,7 @@ func (c *CertificateModel) View() string {
 
 	s.WriteString(c.styles.RevokedCertificateText.Render("Serialnumber: ") + c.certificate.SerialNumber.String())
 	s.WriteString(c.styles.RevokedCertificateText.Render("CommonName: ") + c.certificate.Subject.CommonName)
+	s.WriteString(c.styles.RevokedCertificateText.Render("DN: ") + c.parseDN(c.certificate.Subject.String()))
 	s.WriteString(c.parseCountry(c.certificate.Subject.Country))
 	s.WriteString(c.styles.RevokedCertificateText.Render("Issuer: ") + c.certificate.Issuer.String())
 	s.WriteString(c.styles.RevokedCertificateText.Render("NotBefore: ") + c.certificate.NotBefore.String())
@@ -122,6 +123,16 @@ func (c *CertificateModel) View() string {
 	certInfo := c.styles.Text.Render(s.String())
 
 	return lipgloss.JoinVertical(lipgloss.Top, certInfo)
+}
+
+func (c *CertificateModel) parseDN(dn string) string {
+	var s strings.Builder
+	for _, k := range strings.Split(dn, ",") {
+		sep := strings.Index(k, "=")
+		s.WriteString(c.styles.RevokedCertificateText.Render("\t"+k[:sep]+": ") + k[sep+1:])
+	}
+
+	return s.String()
 }
 
 func (c *CertificateModel) parseCountry(countries []string) string {
