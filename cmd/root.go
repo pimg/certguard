@@ -57,6 +57,14 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+		err := os.MkdirAll(cacheDir, 0o775)
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+	}
+
 	dbConnection, err := db.NewDBConnection(cacheDir)
 	if err != nil {
 		return err
