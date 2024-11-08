@@ -3,8 +3,15 @@
 Base --> Download: d
 Base --> BrowseCache: b
 Base --> Import: i
+Base --> Paste_PEM: import a Certificate in PEM format p
+Paste_PEM --> Base: back, home
+Paste_PEM --> View_PEM: <enter>
+View_PEM --> Paste_PEM: back
+View_PEM --> Base: home
+View_PEM --> View_PEM: check against CRL
 Import --> Base: back, home
 Import --> List: <select CRL>
+Import --> View_PEM: <select PEM>
 List --> Import: Back
 BrowseCache --> List: select file
 List --> ViewEntry: select entry
