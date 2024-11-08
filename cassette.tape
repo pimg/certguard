@@ -58,6 +58,16 @@ Enter
 Sleep 1.5s
 Type "h"
 Sleep 1.5s
+Type "i"
+Sleep 1s
+Type "j"
+Sleep 300ms
+Enter
+Sleep 1.5s
+Type "s"
+Sleep 1.5s
+Type "h"
+Sleep 1.5s
 Type "q"
 Sleep 1s
 
