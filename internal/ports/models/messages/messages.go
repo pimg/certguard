@@ -3,6 +3,7 @@ package messages
 import (
 	"crypto/x509"
 	"net/url"
+	"time"
 
 	"github.com/pimg/certguard/pkg/domain/crl"
 )
@@ -36,4 +37,10 @@ type PemCertificateMsg struct {
 type GetRevokedCertificateMsg struct {
 	RevokedCertificate *crl.RevokedCertificate
 	Found              bool
+}
+
+type OCSPResponseMsg struct {
+	Status           string
+	RevocationDate   time.Time
+	RevocationReason string
 }

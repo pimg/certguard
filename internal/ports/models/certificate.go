@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/x509"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,15 +19,17 @@ type certificateKeyMap struct {
 	Quit   key.Binding
 	Home   key.Binding
 	Search key.Binding
+	OSCP   key.Binding
 }
 
 func (k *certificateKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Search, k.Back, k.Quit, k.Home}
+	return []key.Binding{k.Search, k.OSCP, k.Back, k.Home}
 }
 
 func (k *certificateKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Search, k.Home},
+		{k.OSCP},
 		{k.Back, k.Quit},
 	}
 }
@@ -48,24 +51,33 @@ var certificateKeys = certificateKeyMap{
 		key.WithKeys("s"),
 		key.WithHelp("s", "search CRLs with this certificate"),
 	),
+	OSCP: key.NewBinding(
+		key.WithKeys("o"),
+		key.WithHelp("o", "perform OCSP request"),
+	),
 }
 
 type CertificateModel struct {
-	keys           certificateKeyMap
-	styles         *styles.Styles
-	certificate    *x509.Certificate // TODO create custom struct and move parsing to domain model to do advanced parsing
-	revocationInfo *crl.RevokedCertificate
-	foundOnCRL     *bool
-	errorMsg       string
-	commands       *commands.Commands
+	keys                 certificateKeyMap
+	styles               *styles.Styles
+	certificate          *x509.Certificate // TODO create custom struct and move parsing to domain model to do advanced parsing, also consider removing certificate as this can be obtained from the chiain
+	certificateChain     []*x509.Certificate
+	revocationInfo       *crl.RevokedCertificate
+	foundOnCRL           *bool
+	errorMsg             string
+	OCSPStatus           string
+	OCSPRevocationDate   time.Time
+	OCSPRevocationReason string
+	commands             *commands.Commands
 }
 
-func NewCertificateModel(cert *x509.Certificate, cmds *commands.Commands) *CertificateModel {
+func NewCertificateModel(cert *x509.Certificate, certificateChain []*x509.Certificate, cmds *commands.Commands) *CertificateModel {
 	return &CertificateModel{
-		keys:        certificateKeys,
-		styles:      styles.DefaultStyles(),
-		certificate: cert,
-		commands:    cmds,
+		keys:             certificateKeys,
+		styles:           styles.DefaultStyles(),
+		certificate:      cert,
+		certificateChain: certificateChain,
+		commands:         cmds,
 	}
 }
 
@@ -83,10 +95,25 @@ func (c *CertificateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "s":
 			cmd = c.commands.Search(c.certificate.SerialNumber.String())
 			return c, cmd
+		case "o":
+			if len(c.certificate.OCSPServer) == 0 {
+				c.errorMsg = "Certificate does not contain a OCSP Server"
+				return c, cmd
+			}
+
+			if len(c.certificateChain) <= 1 {
+				c.errorMsg = "Certificate does not contain a certificate chain, Isser certificate missing"
+				return c, cmd
+			}
+			cmd = c.commands.OCSPRequest(c.certificate, c.certificateChain[1], c.certificate.OCSPServer[0])
 		}
 	case messages.GetRevokedCertificateMsg:
 		c.revocationInfo = msg.RevokedCertificate
 		c.foundOnCRL = &msg.Found
+	case messages.OCSPResponseMsg:
+		c.OCSPStatus = msg.Status
+		c.OCSPRevocationDate = msg.RevocationDate
+		c.OCSPRevocationReason = msg.RevocationReason
 	}
 	return c, cmd
 }
@@ -117,6 +144,15 @@ func (c *CertificateModel) View() string {
 
 		if !*c.foundOnCRL {
 			s.WriteString(c.styles.Text.Render("Certificate is not found on any of the stored CRLs"))
+		}
+	}
+
+	if c.OCSPStatus != "" {
+		s.WriteString("\n\nOCSP Response: \n")
+		s.WriteString(c.styles.RevokedCertificateText.Render("OCSP Status: ") + c.OCSPStatus)
+		if c.OCSPRevocationDate != (time.Time{}) {
+			s.WriteString(c.styles.RevokedCertificateText.Render("Revocation Reason: ") + c.OCSPRevocationReason)
+			s.WriteString(c.styles.RevokedCertificateText.Render("Revocation Date: ") + c.OCSPRevocationDate.Format(time.RFC3339))
 		}
 	}
 
