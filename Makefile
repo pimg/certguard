@@ -8,7 +8,7 @@ test:
 
 @PHONY: lint
 lint:
-	golangci-lint run --out-format=github-actions
+	golangci-lint run --out-format=colored-line-number
 
 @PHONY: build
 build:
