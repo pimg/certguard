@@ -11,7 +11,7 @@ import (
 
 func (c *Commands) ParsePemCertficate(pem string) tea.Cmd {
 	return func() tea.Msg {
-		cert, err := certificate.ParsePEMCertificate([]byte(pem))
+		certificateChain, err := certificate.ParsePEMCertificate([]byte(pem))
 		if err != nil {
 			log.Printf("failed to parse certificate: %s", err)
 			return messages.ErrorMsg{
@@ -20,7 +20,8 @@ func (c *Commands) ParsePemCertficate(pem string) tea.Cmd {
 		}
 
 		return messages.PemCertificateMsg{
-			Certificate: cert,
+			Certificate:      certificateChain[0],
+			CertificateChain: certificateChain,
 		}
 	}
 }

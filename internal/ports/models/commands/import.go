@@ -49,7 +49,7 @@ func (c *Commands) ImportFile(path string) tea.Cmd {
 			}
 		default:
 			log.Println("importing Certificate based on file extension")
-			cert, err := certificate.ParsePEMCertificate(rawFile)
+			certificateChain, err := certificate.ParsePEMCertificate(rawFile)
 			if err != nil {
 				log.Printf("failed to parse certificate: %s", err)
 				return messages.ErrorMsg{
@@ -58,7 +58,8 @@ func (c *Commands) ImportFile(path string) tea.Cmd {
 			}
 
 			return messages.PemCertificateMsg{
-				Certificate: cert,
+				Certificate:      certificateChain[0],
+				CertificateChain: certificateChain,
 			}
 		}
 	}
