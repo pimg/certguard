@@ -53,7 +53,7 @@ var certificateKeys = certificateKeyMap{
 type CertificateModel struct {
 	keys           certificateKeyMap
 	styles         *styles.Styles
-	certificate    x509.Certificate // TODO create custom struct and move parsing to domain model to do advanced parsing
+	certificate    *x509.Certificate // TODO create custom struct and move parsing to domain model to do advanced parsing
 	revocationInfo *crl.RevokedCertificate
 	foundOnCRL     *bool
 	errorMsg       string
@@ -64,7 +64,7 @@ func NewCertificateModel(cert *x509.Certificate, cmds *commands.Commands) *Certi
 	return &CertificateModel{
 		keys:        certificateKeys,
 		styles:      styles.DefaultStyles(),
-		certificate: *cert,
+		certificate: cert,
 		commands:    cmds,
 	}
 }

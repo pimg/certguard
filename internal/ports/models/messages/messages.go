@@ -29,7 +29,8 @@ type CRLDeleteConfirmationMsg struct {
 }
 
 type PemCertificateMsg struct {
-	Certificate *x509.Certificate
+	Certificate      *x509.Certificate
+	CertificateChain []*x509.Certificate
 }
 
 type GetRevokedCertificateMsg struct {
