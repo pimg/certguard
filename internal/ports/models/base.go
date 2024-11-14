@@ -174,7 +174,7 @@ func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prevState = m.state
 		m.state = certificateView
 		m.title = titles[certificateView]
-		m.certificateModel = NewCertificateModel(msg.Certificate, m.commands)
+		m.certificateModel = NewCertificateModel(msg.Certificate, msg.CertificateChain, m.commands)
 	}
 
 	return m.handleStates(msg)
