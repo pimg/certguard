@@ -19,6 +19,9 @@ type Styles struct {
 	FilePickerCurrent      lipgloss.Style
 	ListComponentTitle     lipgloss.Color
 	WarningText            lipgloss.Style
+	CertificateChain       lipgloss.Style
+	CertificateTitle       lipgloss.Style
+	CertificateText        lipgloss.Style
 }
 
 func DefaultStyles() *Styles {
@@ -28,7 +31,7 @@ func DefaultStyles() *Styles {
 		Title: lipgloss.NewStyle().Bold(true).
 			Foreground(lipgloss.Color("#EBDBB2")).
 			Background(lipgloss.Color("#83A598")).
-			Width(80).
+			Width(900).
 			PaddingTop(1).
 			PaddingBottom(1).
 			PaddingLeft(1),
@@ -43,5 +46,8 @@ func DefaultStyles() *Styles {
 		FilePickerCurrent:      lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
 		ListComponentTitle:     "#83A598",
 		WarningText:            lipgloss.NewStyle().Foreground(lipgloss.Color("#FABD2F")),
+		CertificateChain:       lipgloss.NewStyle().PaddingTop(1).PaddingLeft(1),
+		CertificateTitle:       lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
+		CertificateText:        lipgloss.NewStyle().PaddingLeft(1).Width(20).Foreground(lipgloss.Color("#83A598")),
 	}
 }

@@ -48,3 +48,24 @@ func TestParseCertificateInvalid(t *testing.T) {
 
 	assert.Equal(t, "failed to parse certificate", errMsg.Err.Error())
 }
+
+func TestParseCertificateChain(t *testing.T) {
+	certRaw, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "testing", "pki", "github.com-chain.pem"))
+	assert.NoError(t, err)
+
+	storage, err := crl.NewMockStorage()
+	assert.NoError(t, err)
+
+	cmds := NewCommands(storage)
+
+	cmd := cmds.ParsePemCertficate(string(certRaw))
+	assert.NotNil(t, cmd)
+
+	certMsg := cmd()
+	assert.NotNil(t, certMsg)
+
+	msg := certMsg.(messages.PemCertificateMsg)
+
+	assert.Len(t, msg.CertificateChain, 3)
+	assert.Equal(t, "github.com", msg.CertificateChain[len(msg.CertificateChain)-1].Subject.CommonName)
+}

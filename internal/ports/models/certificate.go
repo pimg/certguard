@@ -2,12 +2,14 @@ package models
 
 import (
 	"crypto/x509"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/tree"
 	"github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/internal/ports/models/messages"
 	"github.com/pimg/certguard/internal/ports/models/styles"
@@ -102,7 +104,7 @@ func (c *CertificateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			if len(c.certificateChain) <= 1 {
-				c.errorMsg = "Certificate does not contain a certificate chain, Isser certificate missing"
+				c.errorMsg = "Certificate does not contain a certificate chain, Issuer certificate missing"
 				return c, cmd
 			}
 			cmd = c.commands.OCSPRequest(c.certificate, c.certificateChain[1], c.certificate.OCSPServer[0])
@@ -120,14 +122,7 @@ func (c *CertificateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (c *CertificateModel) View() string {
 	var s strings.Builder
-
-	s.WriteString(c.styles.RevokedCertificateText.Render("Serialnumber: ") + c.certificate.SerialNumber.String())
-	s.WriteString(c.styles.RevokedCertificateText.Render("CommonName: ") + c.certificate.Subject.CommonName)
-	s.WriteString(c.styles.RevokedCertificateText.Render("DN: ") + c.parseDN(c.certificate.Subject.String()))
-	s.WriteString(c.parseCountry(c.certificate.Subject.Country))
-	s.WriteString(c.styles.RevokedCertificateText.Render("Issuer: ") + c.certificate.Issuer.String())
-	s.WriteString(c.styles.RevokedCertificateText.Render("NotBefore: ") + c.certificate.NotBefore.String())
-	s.WriteString(c.styles.RevokedCertificateText.Render("NotAfter: ") + c.certificate.NotAfter.String())
+	s.WriteString(c.renderCertificateChain())
 
 	if c.errorMsg != "" {
 		s.WriteString("\n\n\n" + c.errorMsg)
@@ -156,32 +151,63 @@ func (c *CertificateModel) View() string {
 		}
 	}
 
-	certInfo := c.styles.Text.Render(s.String())
+	certInfo := c.styles.CertificateChain.Render(s.String())
 
 	return lipgloss.JoinVertical(lipgloss.Top, certInfo)
 }
 
-func (c *CertificateModel) parseDN(dn string) string {
-	var s strings.Builder
-	for _, k := range strings.Split(dn, ",") {
-		sep := strings.Index(k, "=")
-		s.WriteString(c.styles.RevokedCertificateText.Render("\t"+k[:sep]+": ") + k[sep+1:])
-	}
-
-	return s.String()
+func (c *CertificateModel) renderCertificateChain() string {
+	certificate := c.certificateChain[0]
+	t := tree.Root(c.styles.CertificateTitle.Render(certificate.Subject.CommonName)).
+		Child(c.styles.CertificateText.Render("CommonName: ") + certificate.Subject.CommonName).
+		Child(c.styles.CertificateText.Render("Serialnumber: ") + certificate.SerialNumber.String()).
+		Child(c.styles.CertificateText.Render("DN: ") + parseDN(c.styles, certificate.Subject.String())).
+		Child(parseCountry(c.styles, certificate.Subject.Country)).
+		Child(c.styles.CertificateText.Render("Issuer: ") + certificate.Issuer.String()).
+		Child(c.styles.CertificateText.Render("NotBefore: ") + certificate.NotBefore.String()).
+		Child(c.styles.CertificateText.Render("NotAfter: ") + certificate.NotAfter.String())
+	buildCertificateTree(c.styles, t, c.certificateChain[1:])
+	return fmt.Sprint(t)
 }
 
-func (c *CertificateModel) parseCountry(countries []string) string {
+func buildCertificateTree(s *styles.Styles, t *tree.Tree, certificateChain []*x509.Certificate) {
+	if len(certificateChain) == 0 {
+		return
+	}
+	certificate := certificateChain[0]
+	branch := tree.Root(s.CertificateTitle.Render(certificate.Subject.CommonName)).
+		Child(s.CertificateText.Render("CommonName: ") + certificate.Subject.CommonName).
+		Child(s.CertificateText.Render("Serialnumber: ") + certificate.SerialNumber.String()).
+		Child(s.CertificateText.Render("DN: ") + parseDN(s, certificate.Subject.String())).
+		Child(parseCountry(s, certificate.Subject.Country)).
+		Child(s.CertificateText.Render("Issuer: ") + certificate.Issuer.String()).
+		Child(s.CertificateText.Render("NotBefore: ") + certificate.NotBefore.String()).
+		Child(s.CertificateText.Render("NotAfter: ") + certificate.NotAfter.String())
+	t.Child(branch)
+	buildCertificateTree(s, branch, certificateChain[1:])
+}
+
+func parseDN(s *styles.Styles, dn string) string {
+	var str strings.Builder
+	for _, k := range strings.Split(dn, ",") {
+		sep := strings.Index(k, "=")
+		str.WriteString(s.RevokedCertificateText.Render("\t"+k[:sep]+": ") + k[sep+1:])
+	}
+
+	return str.String()
+}
+
+func parseCountry(s *styles.Styles, countries []string) string {
 	if len(countries) == 0 {
 		return ""
 	}
 
-	var s strings.Builder
-	s.WriteString(c.styles.RevokedCertificateText.Render("Country: "))
+	var str strings.Builder
+	str.WriteString(s.CertificateText.Render("Country: "))
 
 	for _, country := range countries {
-		s.WriteString(country)
+		str.WriteString(country)
 	}
 
-	return s.String()
+	return str.String()
 }

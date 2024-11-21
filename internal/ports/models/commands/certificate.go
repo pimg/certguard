@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"log"
+	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pimg/certguard/internal/ports/models/messages"
@@ -19,8 +20,10 @@ func (c *Commands) ParsePemCertficate(pem string) tea.Cmd {
 			}
 		}
 
+		slices.Reverse(certificateChain)
+		log.Println("reversed certificate chain")
 		return messages.PemCertificateMsg{
-			Certificate:      certificateChain[0],
+			Certificate:      certificateChain[len(certificateChain)-1],
 			CertificateChain: certificateChain,
 		}
 	}
