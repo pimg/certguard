@@ -54,6 +54,8 @@ Sleep 300ms
 Type "j"
 Sleep 300ms
 Type "j"
+Sleep 300ms
+Type "j"
 Enter
 Sleep 1.5s
 Type "h"
@@ -62,9 +64,23 @@ Type "i"
 Sleep 1s
 Type "j"
 Sleep 300ms
+Type "j"
+Sleep 300ms
+Type "j"
+Sleep 300ms
 Enter
 Sleep 1.5s
 Type "s"
+Sleep 1.5s
+Type "h"
+Sleep 150ms
+Type "i"
+Sleep 500ms
+Type "j"
+Sleep 300ms
+Enter
+Sleep 600ms
+Type "o"
 Sleep 1.5s
 Type "h"
 Sleep 1.5s
