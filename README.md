@@ -10,6 +10,10 @@ With CertGuard it is currently possible to:
 - browse stored CRL's
 - list entries in a CRL file
 - inspect entries in a CRL file
+- copy/paste certificate and certificate chains in PEM format
+- import certificate and certificate chains in PEM format
+- view certificates and certificate chains
+- perform OCSP requests from a certificate chain
 
 ![demo](demo.gif)
 
