@@ -8,7 +8,7 @@ Paste_PEM --> Base: back, home
 Paste_PEM --> View_PEM: <enter>
 View_PEM --> Paste_PEM: back
 View_PEM --> Base: home
-View_PEM --> View_PEM: check against CRL
+View_PEM --> View_PEM: check against CRL\nperform OCSP check
 Import --> Base: back, home
 Import --> List: <select CRL>
 Import --> View_PEM: <select PEM>
