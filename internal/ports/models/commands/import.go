@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/pimg/certguard/internal/ports/models/messages"
@@ -57,8 +58,9 @@ func (c *Commands) ImportFile(path string) tea.Cmd {
 				}
 			}
 
+			slices.Reverse(certificateChain)
 			return messages.PemCertificateMsg{
-				Certificate:      certificateChain[0],
+				Certificate:      certificateChain[len(certificateChain)-1],
 				CertificateChain: certificateChain,
 			}
 		}
