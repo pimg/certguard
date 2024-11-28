@@ -83,7 +83,7 @@ func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int, cmd
 	items := revokedCertificatesToItems(crl.RevokedCertificateEntries)
 
 	defaultDelegate := list.NewDefaultDelegate()
-	c := styles.DefaultStyles().ListComponentTitle
+	c := styles.Theme.ListComponentTitle
 	defaultDelegate.Styles.SelectedTitle = defaultDelegate.Styles.SelectedTitle.Foreground(c).BorderLeftForeground(c)
 	defaultDelegate.Styles.SelectedDesc = defaultDelegate.Styles.SelectedTitle
 
@@ -97,7 +97,7 @@ func NewListModel(crl *x509.RevocationList, URL *url.URL, width, height int, cmd
 	revokedList.Styles.Title = revokedList.Styles.Title.Background(c)
 	return &ListModel{
 		keys:     listKeys,
-		styles:   styles.DefaultStyles(),
+		styles:   styles.Theme,
 		list:     revokedList,
 		crl:      crl,
 		crlUrl:   URL,

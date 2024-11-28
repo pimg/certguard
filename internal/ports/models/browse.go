@@ -92,18 +92,18 @@ func NewBrowseModel(height int, cmds *commands.Commands) *BrowseModel {
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(styles.DefaultStyles().ListComponentTitle).
+		BorderForeground(styles.Theme.ListComponentTitle).
 		BorderBottom(true).
 		Bold(false)
 	s.Selected = s.Selected.
-		Foreground(styles.DefaultStyles().FilePickerCurrent.GetForeground()).
-		Background(styles.DefaultStyles().BaseText.GetBackground()).
+		Foreground(styles.Theme.FilePickerCurrent.GetForeground()).
+		Background(styles.Theme.BaseText.GetBackground()).
 		Bold(false)
 	tbl.SetStyles(s)
 
 	return &BrowseModel{
 		table:    tbl,
-		styles:   styles.DefaultStyles(),
+		styles:   styles.Theme,
 		commands: cmds,
 	}
 }

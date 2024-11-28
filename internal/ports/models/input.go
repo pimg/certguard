@@ -62,7 +62,7 @@ func NewInputModel(cmds *commands.Commands) *InputModel {
 	input.Focus()
 	i.textinput = input
 	i.keys = inputKeys
-	i.styles = styles.DefaultStyles()
+	i.styles = styles.Theme
 
 	i.commands = cmds
 

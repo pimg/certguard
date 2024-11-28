@@ -76,7 +76,7 @@ type CertificateModel struct {
 func NewCertificateModel(cert *x509.Certificate, certificateChain []*x509.Certificate, cmds *commands.Commands) *CertificateModel {
 	return &CertificateModel{
 		keys:             certificateKeys,
-		styles:           styles.DefaultStyles(),
+		styles:           styles.Theme,
 		certificate:      cert,
 		certificateChain: certificateChain,
 		commands:         cmds,
@@ -129,12 +129,12 @@ func (c *CertificateModel) View() string {
 	}
 
 	if c.foundOnCRL != nil {
-		s.WriteString("\n\nRevocation Info: \n")
+		s.WriteString("\n\nRevocation Info: \n\n")
 		if *c.foundOnCRL && c.revocationInfo != nil {
-			s.WriteString(c.styles.RevokedCertificateText.Render("Certificate is revoked!"))
-			s.WriteString(c.styles.RevokedCertificateText.Render("Revocation Reason: ") + c.revocationInfo.RevocationReason.String())
-			s.WriteString(c.styles.RevokedCertificateText.Render("Revocation Date: ") + c.revocationInfo.RevocationDate.String())
-			s.WriteString(c.styles.RevokedCertificateText.Render("Revoked by: ") + c.revocationInfo.RevokedBy)
+			s.WriteString(c.styles.WarningText.Render("Certificate is revoked!") + "\n\n")
+			s.WriteString(c.styles.WarningText.Render("Revocation Reason: ") + c.revocationInfo.RevocationReason.String() + "\n")
+			s.WriteString(c.styles.WarningText.Render("Revocation Date: ") + c.revocationInfo.RevocationDate.String() + "\n")
+			s.WriteString(c.styles.WarningText.Render("Revoked by: ") + c.revocationInfo.RevokedBy + "\n")
 		}
 
 		if !*c.foundOnCRL {
@@ -143,11 +143,11 @@ func (c *CertificateModel) View() string {
 	}
 
 	if c.OCSPStatus != "" {
-		s.WriteString("\n\nOCSP Response: \n")
-		s.WriteString(c.styles.RevokedCertificateText.Render("OCSP Status: ") + c.OCSPStatus)
+		s.WriteString("\n\nOCSP Response: \n\n")
+		s.WriteString(c.styles.WarningText.Render("OCSP Status: ") + c.OCSPStatus + "\n")
 		if c.OCSPRevocationDate != (time.Time{}) {
-			s.WriteString(c.styles.RevokedCertificateText.Render("Revocation Reason: ") + c.OCSPRevocationReason)
-			s.WriteString(c.styles.RevokedCertificateText.Render("Revocation Date: ") + c.OCSPRevocationDate.Format(time.RFC3339))
+			s.WriteString(c.styles.WarningText.Render("Revocation Reason: ") + c.OCSPRevocationReason + "\n")
+			s.WriteString(c.styles.WarningText.Render("Revocation Date: ") + c.OCSPRevocationDate.Format(time.RFC3339) + "\n")
 		}
 	}
 

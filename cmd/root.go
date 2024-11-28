@@ -12,12 +12,14 @@ import (
 	"github.com/pimg/certguard/internal/adapter/db"
 	"github.com/pimg/certguard/internal/ports/models"
 	cmds "github.com/pimg/certguard/internal/ports/models/commands"
+	"github.com/pimg/certguard/internal/ports/models/styles"
 	"github.com/pimg/certguard/pkg/domain/crl"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	rootCmd.PersistentFlags().Bool("debug", false, "enables debug logging to a file located in ~/.local/certguard/debug.log")
+	rootCmd.PersistentFlags().String("theme", "dracula", "set the theme of the application. Allowed values: 'dracula', 'gruvbox'")
 }
 
 var rootCmd = &cobra.Command{
@@ -30,6 +32,7 @@ var rootCmd = &cobra.Command{
 
 func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 	debug, _ := cmd.Flags().GetBool("debug")
+	theme, _ := cmd.Flags().GetString("theme")
 
 	if debug {
 		homeDir, err := os.UserHomeDir()
@@ -89,6 +92,8 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Printf("cache initialized at: %s", cacheDir)
+
+	styles.NewStyles(theme)
 
 	commands := cmds.NewCommands(storage)
 

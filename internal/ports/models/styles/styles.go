@@ -2,7 +2,10 @@ package styles
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pimg/certguard/internal/ports/models/styles/colors"
 )
+
+var Theme *Styles
 
 type Styles struct {
 	InputField             lipgloss.Style
@@ -22,32 +25,65 @@ type Styles struct {
 	CertificateChain       lipgloss.Style
 	CertificateTitle       lipgloss.Style
 	CertificateText        lipgloss.Style
+	CertificateWarning     lipgloss.Style
 }
 
-func DefaultStyles() *Styles {
-	return &Styles{
-		InputField: lipgloss.NewStyle().BorderForeground(lipgloss.Color("#83A598")).BorderStyle(lipgloss.NormalBorder()).Padding(1).Width(80),
-		TextArea:   lipgloss.NewStyle().BorderForeground(lipgloss.Color("#83A598")).BorderStyle(lipgloss.NormalBorder()).Padding(1).Width(78),
+func gruvboxTheme() *colors.ThemeColors {
+	return colors.SetThemeColors(&colors.ThemeColorArgs{
+		MainBanner:    "#83A598",
+		Background:    "#282828",
+		HighlightText: "#B8BB26",
+		Text:          "#EBDBB2",
+		WarningText:   "#FABD2F",
+		ErrorText:     "#FB4934",
+	})
+}
+
+func draculaTheme() *colors.ThemeColors {
+	return colors.SetThemeColors(&colors.ThemeColorArgs{
+		MainBanner:    "#bd93f9",
+		Background:    "#282a36",
+		HighlightText: "#50fa7b",
+		Text:          "#f8f8f2",
+		WarningText:   "#f1fa8c",
+		ErrorText:     "#ff5555",
+	})
+}
+
+func NewStyles(themeName string) {
+	var themeColors *colors.ThemeColors
+	switch themeName {
+	case "gruvbox":
+		themeColors = gruvboxTheme()
+	case "dracula":
+		themeColors = draculaTheme()
+	default:
+		themeColors = gruvboxTheme()
+	}
+	Theme = &Styles{
+		InputField: lipgloss.NewStyle().BorderForeground(themeColors.MainBanner).BorderStyle(lipgloss.NormalBorder()).Padding(1).Width(80),
+		TextArea:   lipgloss.NewStyle().BorderForeground(themeColors.MainBanner).BorderStyle(lipgloss.NormalBorder()).Padding(1).Width(78),
 		Title: lipgloss.NewStyle().Bold(true).
-			Foreground(lipgloss.Color("#EBDBB2")).
-			Background(lipgloss.Color("#83A598")).
+			Foreground(themeColors.Text).
+			Background(themeColors.MainBanner).
 			Width(900).
 			PaddingTop(1).
 			PaddingBottom(1).
 			PaddingLeft(1),
-		Background:             lipgloss.NewStyle().Background(lipgloss.Color("#282828")),
-		ErrorMessages:          lipgloss.NewStyle().Background(lipgloss.Color("#FB4934")).BorderForeground(lipgloss.Color("#FB4934")).BorderStyle(lipgloss.NormalBorder()).Width(80).Padding(1),
-		Text:                   lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).Padding(1).Width(80),
-		RevokedCertificateText: lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingTop(1).PaddingLeft(1).Width(20),
-		CRLText:                lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingTop(1).PaddingLeft(1).Width(25),
-		BaseText:               lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingLeft(1).Width(48),
-		BaseMenuText:           lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")).PaddingLeft(1).Width(60),
-		FilePickerFile:         lipgloss.NewStyle().Foreground(lipgloss.Color("#83A598")),
-		FilePickerCurrent:      lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
-		ListComponentTitle:     "#83A598",
-		WarningText:            lipgloss.NewStyle().Foreground(lipgloss.Color("#FABD2F")),
+		Background:             lipgloss.NewStyle().Background(themeColors.Background),
+		ErrorMessages:          lipgloss.NewStyle().Background(themeColors.ErrorText).BorderForeground(themeColors.ErrorText).BorderStyle(lipgloss.NormalBorder()).Width(80).Padding(1),
+		Text:                   lipgloss.NewStyle().Foreground(themeColors.HighlightText).Padding(1).Width(80),
+		RevokedCertificateText: lipgloss.NewStyle().Foreground(themeColors.HighlightText).PaddingTop(1).PaddingLeft(1).Width(20),
+		CRLText:                lipgloss.NewStyle().Foreground(themeColors.HighlightText).PaddingTop(1).PaddingLeft(1).Width(25),
+		BaseText:               lipgloss.NewStyle().Foreground(themeColors.HighlightText).PaddingLeft(1).Width(48),
+		BaseMenuText:           lipgloss.NewStyle().Foreground(themeColors.HighlightText).PaddingLeft(1).Width(60),
+		FilePickerFile:         lipgloss.NewStyle().Foreground(themeColors.MainBanner),
+		FilePickerCurrent:      lipgloss.NewStyle().Foreground(themeColors.HighlightText),
+		ListComponentTitle:     themeColors.MainBanner,
+		WarningText:            lipgloss.NewStyle().Foreground(themeColors.WarningText),
+		CertificateWarning:     lipgloss.NewStyle().Foreground(themeColors.WarningText).PaddingTop(1).PaddingLeft(1).PaddingBottom(1),
 		CertificateChain:       lipgloss.NewStyle().PaddingTop(1).PaddingLeft(1),
-		CertificateTitle:       lipgloss.NewStyle().Foreground(lipgloss.Color("#B8BB26")),
-		CertificateText:        lipgloss.NewStyle().PaddingLeft(1).Width(20).Foreground(lipgloss.Color("#83A598")),
+		CertificateTitle:       lipgloss.NewStyle().Foreground(themeColors.HighlightText),
+		CertificateText:        lipgloss.NewStyle().PaddingLeft(1).Width(20).Foreground(themeColors.MainBanner),
 	}
 }

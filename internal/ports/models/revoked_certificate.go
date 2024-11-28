@@ -48,7 +48,7 @@ func NewRevokedCertificateModel(serialnumber, revocationReason, revocationDate s
 		revocationReason: revocationReason,
 		revocationDate:   revocationDate,
 		keys:             revokedCertificateKeys,
-		styles:           styles.DefaultStyles(),
+		styles:           styles.Theme,
 	}
 }
 

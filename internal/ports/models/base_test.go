@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	cmds "github.com/pimg/certguard/internal/ports/models/commands"
 	"github.com/pimg/certguard/internal/ports/models/messages"
+	"github.com/pimg/certguard/internal/ports/models/styles"
 	"github.com/pimg/certguard/pkg/domain/crl"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,6 +45,7 @@ func TestSwitchBackToBaseModel(t *testing.T) {
 }
 
 func TestSwitchToBrowseModel(t *testing.T) {
+	styles.NewStyles("default")
 	storage, err := crl.NewMockStorage()
 	assert.NoError(t, err)
 
