@@ -131,7 +131,7 @@ func NewBaseModel(cmds *commands.Commands) BaseModel {
 		prevState: baseView,
 		keys:      keys,
 		help:      help.New(),
-		styles:    styles.DefaultStyles(),
+		styles:    styles.Theme,
 		commands:  cmds,
 	}
 }

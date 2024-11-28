@@ -59,7 +59,7 @@ type InputPemModel struct {
 func NewInputPemModel(height, width int, cmds *commands.Commands) *InputPemModel {
 	i := &InputPemModel{
 		keys:   inputPemKeys,
-		styles: styles.DefaultStyles(),
+		styles: styles.Theme,
 	}
 
 	ta := textarea.New()

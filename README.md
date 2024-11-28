@@ -15,7 +15,7 @@ With CertGuard it is currently possible to:
 - view certificates and certificate chains
 - perform OCSP requests from a certificate chain
 
-![demo](demo.gif)
+![demo](docs/demo.gif)
 
 ## File locations
 CertGuard uses two file locations:
@@ -23,16 +23,37 @@ CertGuard uses two file locations:
 - `~/.cache/certguard/import` import directory for importing CRLs from file
 - `~/.local/share/certguard` for the `debug.log` file
 
+## Themes
+CertGuard has predefined themes that can be switched using the `--theme` argument. Currently supported themes are:
+1. Dracula (Default)
+2. Gruvbox
+
+### Dracula
+![dracula-home.png](docs/dracula-home.png)
+
+Dracula home screen
+![dracula-cert-view.png](docs/dracula-cert-view.png)
+
+Dracula certificate view
+
+### Gruvbox
+![gruvbox-home.png](docs/gruvbox-home.png)
+
+Gruvbox home screen
+![gruvbox-cert-view.png](docs/gruvbox-cert-view.png)
+
+Gruvbox certificate view
+
 ## States
 CertGuard TUI is built with [BubbleTea](https://github.com/charmbracelet/bubbletea/tree/master) using the [Elm architecture](https://guide.elm-lang.org/architecture/).
 Different screens are built using different states. Below is a statemachine depicting the state model of CertGuard:
 
-![states](states.svg)
+![states](docs/states.svg)
 
 ## Storage
 All information on CRL's and revoked certificates are stored on a local SQLite database. 
 The Database schema used for Certguard only stores public information:
-![database schema](db_schema.svg)
+![database schema](docs/db_schema.svg)
 
 ## Development
 A MAKE file has been included for convenience:

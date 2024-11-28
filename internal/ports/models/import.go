@@ -60,7 +60,7 @@ type ImportModel struct {
 }
 
 func NewImportModel(cmds *commands.Commands, height int) *ImportModel {
-	browseStyle := styles.DefaultStyles()
+	browseStyle := styles.Theme
 	fp := filepicker.New()
 	fp.AllowedTypes = []string{".crl", ".pem", ".crt"}
 	fp.ShowPermissions = false
@@ -74,7 +74,7 @@ func NewImportModel(cmds *commands.Commands, height int) *ImportModel {
 
 	return &ImportModel{
 		keys:       importKeys,
-		styles:     styles.DefaultStyles(),
+		styles:     browseStyle,
 		filepicker: fp,
 		commands:   cmds,
 	}
