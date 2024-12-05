@@ -23,7 +23,7 @@ sqlc:
 	sqlc generate -f internal/adapter/db/sqlc.yaml
 
 
-GOLANG_CROSS_VERSION  ?= v1.22.2
+GOLANG_CROSS_VERSION  ?= v1.23.2
 PACKAGE_NAME ?= certguard
 
 SYSROOT_DIR     ?= sysroots
