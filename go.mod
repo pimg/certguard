@@ -6,11 +6,11 @@ require (
 	github.com/charmbracelet/bubbles v0.20.0
 	github.com/charmbracelet/bubbletea v1.2.4
 	github.com/charmbracelet/lipgloss v1.0.0
-	github.com/rubenv/sql-migrate v1.7.0
+	github.com/rubenv/sql-migrate v1.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tursodatabase/go-libsql v0.0.0-20241113154718-293fe7f21b08
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 )
 
 require (
