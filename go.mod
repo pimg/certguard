@@ -10,7 +10,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tursodatabase/go-libsql v0.0.0-20241113154718-293fe7f21b08
-	golang.org/x/crypto v0.31.0
+	golang.org/x/crypto v0.32.0
 )
 
 require (
@@ -38,7 +38,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
