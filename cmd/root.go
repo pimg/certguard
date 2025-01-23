@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/pimg/certguard/config"
 	"github.com/pimg/certguard/internal/adapter/db"
 	"github.com/pimg/certguard/internal/ports/models"
 	cmds "github.com/pimg/certguard/internal/ports/models/commands"
@@ -17,9 +18,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var v *config.ViperConfig
+
 func init() {
-	rootCmd.PersistentFlags().Bool("debug", false, "enables debug logging to a file located in ~/.local/certguard/debug.log")
-	rootCmd.PersistentFlags().String("theme", "dracula", "set the theme of the application. Allowed values: 'dracula', 'gruvbox'")
+	v = config.NewViperConfig()
+	rootCmd.PersistentFlags().BoolVarP(&v.Config().Log.Debug, "debug", "d", false, "enables debug logging to a file located in ~/.local/certguard/debug.log")
+	rootCmd.PersistentFlags().StringVarP(&v.Config().Theme.Name, "theme", "t", "dracula", "set the theme of the application. Allowed values: 'dracula', 'gruvbox'")
+
+	// bind Cobra flags to viper config
+	_ = v.BindPFlag("config.theme.name", rootCmd.PersistentFlags().Lookup("theme"))
+	_ = v.BindPFlag("config.log.debug", rootCmd.PersistentFlags().Lookup("debug"))
 }
 
 var rootCmd = &cobra.Command{
@@ -27,21 +35,22 @@ var rootCmd = &cobra.Command{
 	Use:     "certguard",
 	Long:    "Certguard can download, store and inspect x.509 Certificate Revocation Lists",
 	Example: "certguard",
-	RunE:    runInteractiveCertGuard,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return v.InitializeConfig()
+	},
+	RunE: runInteractiveCertGuard,
 }
 
 func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
-	debug, _ := cmd.Flags().GetBool("debug")
-	theme, _ := cmd.Flags().GetString("theme")
+	debug := v.Config().Log.Debug
+	theme := v.Config().Theme.Name
 
 	if debug {
-		homeDir, err := os.UserHomeDir()
+		logDir, err := logDir()
 		if err != nil {
-			fmt.Println("fatal:", err)
-			os.Exit(1)
+			return err
 		}
 
-		logDir := filepath.Join(homeDir, ".local", "share", "certguard")
 		err = os.MkdirAll(logDir, 0o777)
 		if err != nil {
 			return err
@@ -55,7 +64,12 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 		defer f.Close()
 	}
 
-	cacheDir, err := determineCacheDir()
+	cacheDir, err := cacheDir()
+	if err != nil {
+		return err
+	}
+
+	importDir, err := importDir()
 	if err != nil {
 		return err
 	}
@@ -86,7 +100,7 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	storage, err := crl.NewStorage(libsqlStorage, cacheDir)
+	storage, err := crl.NewStorage(libsqlStorage, cacheDir, importDir)
 	if err != nil {
 		return err
 	}
@@ -107,7 +121,41 @@ func Execute() error {
 	return rootCmd.Execute()
 }
 
-func determineCacheDir() (string, error) {
+func cacheDir() (string, error) {
+	if v.Config().CacheDirectory != "" {
+		return v.Config().CacheDirectory, nil
+	}
+
+	return defaultDir()
+}
+
+func importDir() (string, error) {
+	if v.Config().ImportDirectory != "" {
+		return v.Config().ImportDirectory, nil
+	}
+
+	dir, err := defaultDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(dir, "import"), nil
+}
+
+func logDir() (string, error) {
+	if v.Config().Log.Directory != "" {
+		return v.Config().Log.Directory, nil
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.New("could not create file path to User home dir, logging will not be enabled")
+	}
+
+	return filepath.Join(homeDir, ".local", "share", "certguard"), nil
+}
+
+func defaultDir() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", errors.New("could not create file path to User home dir, Cache will not be enabled")

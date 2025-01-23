@@ -3,7 +3,6 @@ package crl
 import (
 	"context"
 	"crypto/x509"
-	"path/filepath"
 )
 
 type Repository interface {
@@ -19,12 +18,14 @@ type Repository interface {
 type Storage struct {
 	Repository Repository
 	baseDir    string
+	importDir  string
 }
 
-func NewStorage(repository Repository, baseDir string) (*Storage, error) {
+func NewStorage(repository Repository, baseDir, importDir string) (*Storage, error) {
 	storage := &Storage{
 		Repository: repository,
 		baseDir:    baseDir,
+		importDir:  importDir,
 	}
 	return storage, nil
 }
@@ -34,5 +35,5 @@ func (s *Storage) CacheDir() string {
 }
 
 func (s *Storage) ImportDir() string {
-	return filepath.Join(s.baseDir, "/import")
+	return s.importDir
 }

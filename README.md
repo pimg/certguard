@@ -18,10 +18,13 @@ With CertGuard it is currently possible to:
 ![demo](docs/demo.gif)
 
 ## File locations
-CertGuard uses two file locations:
+CertGuard uses following default file locations:
 - `~/.cache/certguard` location of the database/storage file
 - `~/.cache/certguard/import` import directory for importing CRLs from file
 - `~/.local/share/certguard` for the `debug.log` file
+- `~/.config/certguard` for the `config.yaml` file
+
+All these locations can be changed in the [config](#configuration) file.
 
 ## Themes
 CertGuard has predefined themes that can be switched using the `--theme` argument. Currently supported themes are:
@@ -54,6 +57,17 @@ Different screens are built using different states. Below is a statemachine depi
 All information on CRL's and revoked certificates are stored on a local SQLite database. 
 The Database schema used for Certguard only stores public information:
 ![database schema](docs/db_schema.svg)
+
+## Configuration
+CertGuard can be configured using one of three ways:
+1. command line flags
+2. environment variables
+3. config file
+
+The precedence is `command line flags` > `environment variables` > `config file` > `defaults`
+
+A sample config file is included in the repo: `config.yaml`
+The default locations CertGuard looks for the config file are the current directory (`.`) and `$HOME/.config/certguard`
 
 ## Development
 A MAKE file has been included for convenience:
