@@ -1,0 +1,5 @@
+config:
+  theme:
+    name: gruvbox
+  log:
+    debug: true

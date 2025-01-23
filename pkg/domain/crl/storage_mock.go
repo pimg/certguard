@@ -64,5 +64,5 @@ func NewMockStorage() (*Storage, error) {
 	return NewStorage(&MockRepository{
 		CRLs:                      CRLs,
 		RevokedCertificateEntries: RevokedCertificateEntries,
-	}, "test")
+	}, "test", "test/import")
 }
