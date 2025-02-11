@@ -137,7 +137,7 @@ func NewBaseModel(cmds *commands.Commands) BaseModel {
 }
 
 func (m BaseModel) Init() tea.Cmd {
-	return nil
+	return tea.EnterAltScreen
 }
 
 func (m BaseModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

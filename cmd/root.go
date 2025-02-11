@@ -111,7 +111,7 @@ func runInteractiveCertGuard(cmd *cobra.Command, args []string) error {
 
 	commands := cmds.NewCommands(storage)
 
-	if _, err := tea.NewProgram(models.NewBaseModel(commands), tea.WithAltScreen()).Run(); err != nil {
+	if _, err := tea.NewProgram(models.NewBaseModel(commands)).Run(); err != nil {
 		return err
 	}
 	return nil
