@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.3.2
+	github.com/charmbracelet/bubbletea v1.3.3
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/rubenv/sql-migrate v1.7.1
 	github.com/spf13/cobra v1.8.1
