@@ -67,7 +67,7 @@ func NewImportModel(cmds *commands.Commands, height int) *ImportModel {
 	fp.Styles.File = browseStyle.FilePickerFile
 	fp.Styles.Selected = browseStyle.FilePickerCurrent
 	fp.Styles.Cursor = browseStyle.FilePickerFile
-	fp.Height = height - 10
+	fp.SetHeight(height - 10)
 	fp.KeyMap.Back = key.NewBinding(key.WithKeys("h", "backspace", "left"), key.WithHelp("h", "back"))
 
 	fp.CurrentDirectory = cmds.ImportDir()
