@@ -14,7 +14,7 @@ jobs:
           submodules: 'true'
       - run: git fetch --prune --unshallow
       - name: setup dependencies
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
       - name: setup release environment
         run: |-
           echo 'GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}\n''GORELEASER_CURRENT_TAG='$(git describe --tags --abbrev=0)'\nGORELEASER_PREVIOUS_TAG='$( git tag --sort=-creatordate | grep -A 1 $(git describe --tags --abbrev=0) | tail -n 1) > .release-env
