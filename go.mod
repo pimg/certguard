@@ -1,6 +1,6 @@
 module github.com/pimg/certguard
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0
@@ -10,7 +10,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
-	github.com/tursodatabase/go-libsql v0.0.0-20250609073118-9c24e0e7fa97
+	github.com/tursodatabase/go-libsql v0.0.0-20260424063416-3051e37e6e04
 	golang.org/x/crypto v0.59.0
 )
 
